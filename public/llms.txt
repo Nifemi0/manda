@@ -1,0 +1,34 @@
+# Manda
+
+> Manda is a human-owned payment identity that gives personal AI agents narrow, revocable payment authority across Arbitrum Sepolia and Robinhood Chain Testnet.
+
+Manda uses an ERC-4337 Modular Account V2 owned by a human wallet. An AI agent uses a separate delegated key. Payment requests pass through recipient, amount, chain, expiry, daily-budget, approval-threshold, reserve, and replay checks before execution. Eligible UserOperations receive gas sponsorship.
+
+## Primary pages
+
+- [Product overview](/): Product thesis, authority model, payment path, supported use cases, and FAQs.
+- [Documentation](/docs.html): Architecture, policy reference, agent API, verified network evidence, security boundaries, and local setup.
+- [Identity setup](/onboarding.html): Connect an owner, prepare the smart account, configure a mandate, and review before signing.
+- [Control room](/app.html): Inspect ownership, active policy, balances, attributed activity, sponsorship, and revocation controls.
+
+## Source documentation
+
+- [GitHub repository](https://github.com/Nifemi0/manda)
+- [README](https://github.com/Nifemi0/manda/blob/main/README.md)
+- [Architecture](https://github.com/Nifemi0/manda/blob/main/docs/ARCHITECTURE.md)
+- [Product requirements](https://github.com/Nifemi0/manda/blob/main/docs/PRD.md)
+- [Testing status](https://github.com/Nifemi0/manda/blob/main/docs/TESTING-STATUS.md)
+
+## Verified networks
+
+- Arbitrum Sepolia, chain ID 421614.
+- Robinhood Chain Testnet, chain ID 46630.
+- Shared smart-account address: 0xA4d8005e48893eD97cB765D7C3D4bcD7bE01F2FE.
+
+## Important boundaries
+
+- The human wallet remains the root owner.
+- The agent never receives the owner's private key.
+- Runtime policy and onchain account modules provide separate enforcement layers.
+- Cross-chain bridging is optional and is not required for the verified payment paths.
+- This is a testnet hackathon prototype, not a production custody service.

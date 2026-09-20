@@ -1,4 +1,4 @@
-# Project Memory
+# Manda Project Memory
 
 Last updated: 2026-09-20
 
@@ -6,6 +6,8 @@ Last updated: 2026-09-20
 
 - The product name is **Manda**.
 - The primary line is **Give agents permission, not your wallet.**
+- Every public page now uses the Manda brand, shared navigation targets, and a detailed footer linking the product, documentation, source repository, and verified network evidence.
+- The public documentation route is `frontend/docs.html`; the source documentation index is `docs/README.md`; machine-readable product context is served from `/llms.txt` via `public/llms.txt`.
 - Build a payment product rather than a freelance marketplace.
 - The central concept is one programmable financial identity shared between a human and their personal AI agent.
 - The human is the root owner.
@@ -78,7 +80,7 @@ The product differs from Fiverr and other freelance platforms because it is paym
 
 The files in `docs/` define the current product plan. This memory records conversation decisions and unresolved questions. Update both when a decision changes. Do not convert an unverified item into a product claim without evidence.
 
-# Verified implementation state
+## Verified implementation state
 
 - 2026-09-20: Deployed the human-owned Modular Account V2 at `0xA4d8005e48893eD97cB765D7C3D4bcD7bE01F2FE` on Arbitrum Sepolia through Candide's public sponsored ERC-4337 endpoint.
 - The onboarding UI reported deployment transaction `0x0798…e367`; the public Arbitrum Sepolia RPC independently returned non-empty runtime bytecode for the account.

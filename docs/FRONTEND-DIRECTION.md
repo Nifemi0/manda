@@ -1,4 +1,4 @@
-# Locked Frontend Direction
+# Manda Frontend Direction
 
 Status: **Direction locked for the first prototype**
 Direction name: **Authority Console**

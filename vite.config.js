@@ -6,6 +6,7 @@ export default defineConfig(({ mode }) => {
   return {
     root: 'frontend',
     envDir: '..',
+    publicDir: '../public',
     server: {
       proxy: {
         '/api/agent': {
@@ -33,6 +34,7 @@ export default defineConfig(({ mode }) => {
     rollupOptions: {
       input: {
         landing: resolve(import.meta.dirname, 'frontend/index.html'),
+        docs: resolve(import.meta.dirname, 'frontend/docs.html'),
         onboarding: resolve(import.meta.dirname, 'frontend/onboarding.html'),
         control: resolve(import.meta.dirname, 'frontend/app.html')
       }

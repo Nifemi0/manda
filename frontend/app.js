@@ -107,7 +107,7 @@ function renderProductState(state = readProductState()) {
     : accountDescription.textContent;
   authorityStatus.innerHTML = account.deployed ? 'SMART IDENTITY<br>DEPLOYED' : authorityStatus.innerHTML;
   const footerState = document.querySelector('footer p:last-child');
-  if (footerState) footerState.textContent = activePolicy ? `Live policy loaded · ${Number(policy.chainId) === 46630 ? 'Robinhood Chain Testnet' : 'Arbitrum Sepolia'}` : 'No active policy loaded';
+  if (footerState) footerState.innerHTML = `<i></i> ${activePolicy ? `LIVE POLICY LOADED · ${Number(policy.chainId) === 46630 ? 'ROBINHOOD CHAIN TESTNET' : 'ARBITRUM SEPOLIA'}` : 'NO ACTIVE POLICY LOADED'}`;
 }
 
 async function syncAgentActivity(ownerAddress = connectedOwner) {

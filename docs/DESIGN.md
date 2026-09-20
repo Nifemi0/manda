@@ -1,4 +1,4 @@
-# Product Design
+# Manda Product Design
 
 ## Design goal
 

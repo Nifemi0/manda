@@ -23,17 +23,31 @@ The agent completes a small approved payment, a larger unauthorized payment is b
 
 ## Documentation
 
+- [Documentation index](docs/README.md)
+- [Web documentation](frontend/docs.html)
 - [Product requirements](docs/PRD.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Agent service API](docs/API.md)
+- [Security model](docs/SECURITY.md)
 - [Product design](docs/DESIGN.md)
 - [Locked scope](docs/SCOPE.md)
 - [Frontend direction](docs/FRONTEND-DIRECTION.md)
 - [Build tasks](docs/TASKS.md)
+- [Testing and onchain evidence](docs/TESTING-STATUS.md)
+- [LLM-readable product map](public/llms.txt)
 - [Project memory](memory.md)
+
+## Product routes
+
+- `/` — product story, mechanism, supported networks, and entry point.
+- `/docs.html` — technical model, policy reference, agent API, evidence, and setup.
+- `/onboarding.html` — owner connection, smart-account preparation, mandate configuration, and review.
+- `/app.html` — live control room for policy, balances, payments, activity, and revocation.
+- `/llms.txt` — concise machine-readable project context and canonical links.
 
 ## Current status
 
-The landing page, wallet-aware onboarding, control room, dual-chain Modular Account V2 deployment, delegated mandate, authenticated agent service, sponsored payments on Robinhood Chain Testnet and Arbitrum Sepolia, and policy rejection path are implemented. Live revocation evidence, optional bridge selection, and the final submission package remain.
+The landing page, technical documentation, wallet-aware onboarding, control room, dual-chain Modular Account V2 deployment, delegated mandate, authenticated agent service, sponsored payments on Robinhood Chain Testnet and Arbitrum Sepolia, and policy rejection path are implemented. Live revocation evidence, optional bridge selection, and the final submission package remain.
 
 ## Local development
 

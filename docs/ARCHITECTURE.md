@@ -1,4 +1,4 @@
-# Architecture
+# Manda Architecture
 
 ## System overview
 
@@ -45,17 +45,17 @@ Gasless means the end user does not pay native gas. The application or sponsor s
 
 ### Robinhood Chain testnet
 
-- Use ERC-4337 smart accounts.
-- Use Alchemy Bundler and Gas Manager for gas sponsorship.
-- Verify the selected test token, faucet, addresses, and explorer before implementation.
-- Consider USDG only after confirming testnet availability and required token behavior.
+- The deterministic Modular Account V2 is deployed at `0xA4d8005e48893eD97cB765D7C3D4bcD7bE01F2FE`.
+- Alchemy Bundler and Gas Manager sponsor eligible ERC-4337 operations.
+- Mandate installation and authenticated native-value agent payments are confirmed onchain.
+- Token support beyond native testnet value remains outside the verified claim set.
 
 ### Arbitrum Sepolia
 
-- Deploy the same account and permission model.
-- Use a compatible ERC-4337 bundler and paymaster.
-- Evaluate Arbitrum MPP for a USDC authorization-based payment proof.
-- Do not claim the MPP flow works on Robinhood Chain until its chain and token support are tested.
+- The same deterministic Modular Account V2 is deployed at `0xA4d8005e48893eD97cB765D7C3D4bcD7bE01F2FE`.
+- Candide Bundler and paymaster sponsor eligible ERC-4337 operations.
+- Mandate installation and authenticated native-value agent payments are confirmed onchain.
+- Arbitrum MPP and USDC payment claims remain deferred until compatibility is tested.
 
 ## Cross-chain routing
 
@@ -86,10 +86,9 @@ For the hackathon demo, both accounts should be pre-funded. Bridging is an enhan
 - Require an owner signature to register or replace a policy. High-value payment approvals bind the policy, request ID, account, chain, recipient, amount, and expiry.
 - Serialize payment decisions and persist a pending reservation before submitting a UserOperation so concurrent requests cannot overspend the runtime budget.
 
-## Decisions still requiring implementation validation
+## Remaining validation
 
 - Production persistence and multi-user isolation beyond the single-owner hackathon prototype.
-- Arbitrum value-payment evidence through the Candide paymaster.
-- Test token and faucet on Robinhood testnet.
 - Whether MPP supports the desired Robinhood deployment and token.
 - Bridge provider, only if the optional rebalancer is built.
+- Live owner-signed revocation evidence; the chain-aware uninstall path is implemented but intentionally has not disabled the active demo mandates.
