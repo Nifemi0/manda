@@ -119,6 +119,32 @@ async function syncAgentActivity(ownerAddress = connectedOwner) {
   return activity;
 }
 
+async function syncAgentState(ownerAddress, preferredChainId = 421614) {
+  const selectedChainId = [421614, 46630].includes(Number(preferredChainId)) ? Number(preferredChainId) : 421614;
+  const chainIds = [selectedChainId, ...[421614, 46630].filter(chainId => chainId !== selectedChainId)];
+  const loaded = await Promise.all(chainIds.map(async chainId => {
+    const response = await agentFetch(`/api/agent/policy?chainId=${chainId}`, {}, ownerAddress);
+    if (!response.ok) return null;
+    return (await response.json()).policy;
+  }));
+  const policies = loaded.filter(Boolean);
+  if (!policies.length) throw new Error('No deployed mandate is available for this owner.');
+  const preferred = policies.find(policy => Number(policy.chainId) === selectedChainId) || policies[0];
+  const byChain = Object.fromEntries(policies.map(policy => [String(policy.chainId), policy]));
+  const accountFor = chainId => {
+    const policy = byChain[String(chainId)];
+    return policy ? { address: policy.smartAccount, chainId, deployed: true, verifiedAt: new Date().toISOString() } : undefined;
+  };
+  writeProductState({
+    owner: ownerAddress,
+    policy: preferred,
+    policies: { ...(readProductState().policies || {}), ...byChain },
+    smartAccount: accountFor(421614),
+    robinhoodAccount: accountFor(46630)
+  });
+  await syncAgentActivity(ownerAddress);
+}
+
 async function runPayment(kind) {
   const state = readProductState();
   const policy = state.policy;
@@ -172,7 +198,12 @@ function renderDashboardWallet({ address, network }) {
   authorityStatus.innerHTML = 'ROOT AUTHORITY<br>CONNECTED';
   dashboardConnect.textContent = 'Wallet connected ✓'; dashboardConnect.disabled = true;
   renderProductState();
-  if (readAgentSession(address)) syncAgentActivity(address).catch(() => {});
+  if (readAgentSession(address)) {
+    const preferredChainId = network?.chainId ? Number(network.chainId) : 421614;
+    syncAgentState(address, preferredChainId).catch(error => {
+      accountDescription.textContent = error.message;
+    });
+  }
 }
 
 dashboardConnect.addEventListener('click', async () => {
