@@ -10,6 +10,7 @@ Verified: 2026-09-20
 - Sponsorship path: Candide public Arbitrum Sepolia bundler/paymaster fallback
 - UI transaction evidence: `0x0798…e367`
 - RPC verification: `eth_getCode` returned non-empty EIP-7702-style delegated account runtime bytecode.
+- Production authenticated payment: [`0x952916eb8280a0a30972edfa181f337fc0d3bbbe4d6fb390289935dc27558d2b`](https://sepolia.arbiscan.io/tx/0x952916eb8280a0a30972edfa181f337fc0d3bbbe4d6fb390289935dc27558d2b), receipt status `0x1`, block `310901837`.
 
 ## Independent verification
 

@@ -68,8 +68,8 @@
 - [x] Save transaction hashes for successful flows and policy-ledger evidence for rejected flows.
 - [x] Add automated policy-boundary tests and honest testing-status documentation with dual-chain onchain evidence.
 - [ ] Capture the 60–90 second demo.
-- [ ] Prepare submission copy around one thesis and two core capabilities.
-- [ ] Verify the project from a clean environment before submission.
+- [x] Prepare submission copy around one thesis and two core capabilities.
+- [x] Verify tracked files with an isolated install, test run, and production build.
 
 ## Recommended build order
 

@@ -4,6 +4,10 @@
 
 This project is a programmable payment identity shared safely between a person and their personal AI agent. The person owns the account; the agent can make gas-sponsored payments only within explicit, revocable rules.
 
+[Open the live product](https://manda-dun.vercel.app/) · [Read the web documentation](https://manda-dun.vercel.app/docs.html) · [Connect an agent](https://manda-dun.vercel.app/agent.html)
+
+![Manda landing page explaining human-controlled agent payments](evidence/original-depth-content-full.png)
+
 ## Why it exists
 
 Personal agents need to pay for APIs, data, compute, and digital services without receiving unrestricted control of a wallet. The product combines a human-controlled smart account with constrained agent permissions, visible attribution, and a unified experience across Arbitrum and Robinhood Chain.
@@ -15,11 +19,17 @@ Personal agents need to pay for APIs, data, compute, and digital services withou
 - Gas-sponsored ERC-4337 payments.
 - Arbitrum Sepolia and Robinhood Chain testnet support.
 - Unified multi-chain balances and activity.
-- Optional background routing and rebalancing.
 
 ## Demo promise
 
-The agent completes a small approved payment, a larger unauthorized payment is blocked, the activity feed explains both outcomes, and the human revokes the agent's authority. The product demonstrates real testnet activity on both supported chains.
+The agent completes a small approved payment, a larger unauthorized payment is blocked, and the activity feed explains both outcomes. The owner can revoke the agent mandate from the control room. The product demonstrates real sponsored testnet payments on both supported chains; live revocation remains an explicitly documented verification gap.
+
+## Verified onchain evidence
+
+- Shared Modular Account V2: [`0xA4d8…F2FE`](https://sepolia.arbiscan.io/address/0xA4d8005e48893eD97cB765D7C3D4bcD7bE01F2FE)
+- Production Arbitrum Sepolia payment: [`0x9529…8d2b`](https://sepolia.arbiscan.io/tx/0x952916eb8280a0a30972edfa181f337fc0d3bbbe4d6fb390289935dc27558d2b)
+- Robinhood Chain Testnet payment: [`0x0632…42f3`](https://explorer.testnet.chain.robinhood.com/tx/0x063219ecd3b3c8913ca40f3eba470dd16fa66d552c9ea95e4a62f645035142f3)
+- [Claims and evidence matrix](CLAIMS.md)
 
 ## Documentation
 
@@ -34,6 +44,8 @@ The agent completes a small approved payment, a larger unauthorized payment is b
 - [Frontend direction](docs/FRONTEND-DIRECTION.md)
 - [Build tasks](docs/TASKS.md)
 - [Testing and onchain evidence](docs/TESTING-STATUS.md)
+- [Claims and evidence matrix](CLAIMS.md)
+- [HackQuest submission draft](SUBMISSION.md)
 - [LLM-readable product map](public/llms.txt)
 - [Project memory](memory.md)
 
@@ -48,7 +60,7 @@ The agent completes a small approved payment, a larger unauthorized payment is b
 
 ## Current status
 
-The landing page, technical documentation, wallet-aware onboarding, control room, dual-chain Modular Account V2 deployment, delegated mandate, authenticated agent service, sponsored payments on Robinhood Chain Testnet and Arbitrum Sepolia, and policy rejection path are implemented. Live revocation evidence, optional bridge selection, and the final submission package remain.
+The landing page, technical documentation, wallet-aware onboarding, control room, dual-chain Modular Account V2 deployment, delegated mandate, authenticated agent service, sponsored payments on Robinhood Chain Testnet and Arbitrum Sepolia, and policy rejection path are implemented. The public repository passes all 17 tests and a clean production build. Live revocation evidence and the demo video remain; routing and bridging are outside the verified scope.
 
 ## Local development
 
