@@ -1,0 +1,22 @@
+[Unit]
+Description=Manda application and agent payment service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=manda
+Group=manda
+WorkingDirectory=/opt/manda/app
+EnvironmentFile=/etc/manda/manda.env
+ExecStart=/usr/bin/npm run start:production
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/manda
+
+[Install]
+WantedBy=multi-user.target

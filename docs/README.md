@@ -8,6 +8,7 @@ Manda is a human-owned smart-account payment identity that gives an AI agent nar
 - [Architecture](ARCHITECTURE.md) explains ownership, delegated execution, chain integrations, and security boundaries.
 - [Agent service API](API.md) documents authentication, request schemas, responses, and policy errors.
 - [Security model](SECURITY.md) records protected assets, trust boundaries, enforcement layers, and prototype limits.
+- [VPS deployment](DEPLOYMENT.md) documents the production process, service boundaries, and secret storage.
 - [Testing status](TESTING-STATUS.md) is the source of truth for automated checks and onchain evidence.
 
 ## Product and delivery

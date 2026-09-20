@@ -12,8 +12,8 @@ const readEnv = key => {
   const line = readFileSync(envPath, 'utf8').split(/\r?\n/).find(item => item.startsWith(`${key}=`));
   return line ? line.slice(key.length + 1).trim() : '';
 };
-const apiKey = readEnv('VITE_ALCHEMY_API_KEY');
-const policyId = readEnv('VITE_ALCHEMY_GAS_POLICY_ID');
+const apiKey = readEnv('ALCHEMY_API_KEY') || readEnv('VITE_ALCHEMY_API_KEY');
+const policyId = readEnv('ALCHEMY_GAS_POLICY_ID') || readEnv('VITE_ALCHEMY_GAS_POLICY_ID');
 const contentTypes = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.txt': 'text/plain; charset=utf-8',
@@ -41,6 +41,9 @@ async function proxy(req, res, target, extraHeaders = {}) {
   res.end(Buffer.from(await response.arrayBuffer()));
 }
 
+const port = Number(process.env.PORT || 4173);
+const host = process.env.HOST || '127.0.0.1';
+
 createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://127.0.0.1');
@@ -64,4 +67,4 @@ createServer(async (req, res) => {
     res.writeHead(502, { 'content-type': 'application/json' });
     res.end(JSON.stringify({ error: error.message }));
   }
-}).listen(Number(process.env.PORT || 4173), '127.0.0.1', () => console.log(`Production app ready on http://127.0.0.1:${process.env.PORT || 4173}`));
+}).listen(port, host, () => console.log(`Production app ready on http://${host}:${port}`));

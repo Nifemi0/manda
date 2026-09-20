@@ -7,6 +7,7 @@
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1 --port 4173",
     "start": "node scripts/app-server.mjs",
+    "start:production": "node scripts/start-production.mjs",
     "agent:key": "node scripts/generate-agent-key.mjs",
     "agent:serve": "node scripts/agent-service.mjs",
     "test": "node --test tests/*.test.mjs"

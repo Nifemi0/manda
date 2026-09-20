@@ -1,6 +1,8 @@
 import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';
-import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createPublicClient, http, isAddress, verifyMessage } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { arbitrumSepolia } from 'viem/chains';
@@ -11,6 +13,7 @@ import { evaluatePayment } from '../frontend/policy-engine.js';
 import { paymentApprovalMessage, policyIdentifier, policyRegistrationMessage } from '../frontend/policy-auth.js';
 
 const root = new URL('../', import.meta.url);
+const projectRoot = fileURLToPath(root);
 const readText = path => readFileSync(path, 'utf8').trim();
 const readEnv = key => {
   if (process.env[key]) return process.env[key].trim();
@@ -19,24 +22,32 @@ const readEnv = key => {
   const line = readFileSync(envPath, 'utf8').split(/\r?\n/).find(item => item.startsWith(`${key}=`));
   return line ? line.slice(key.length + 1).trim() : '';
 };
-const secretPath = new URL('.agent-key.local', root);
-const apiTokenPath = new URL('.agent-api-token.local', root);
-const ownerPath = new URL('.owner-address.local', root);
-const ledgerPath = new URL('.agent-ledger.local.json', root);
-const ledgerTempPath = new URL('.agent-ledger.local.tmp', root);
+const runtimeDir = readEnv('MANDA_DATA_DIR');
+if (runtimeDir) mkdirSync(runtimeDir, { recursive: true });
+const runtimePath = name => runtimeDir ? resolve(runtimeDir, name) : resolve(projectRoot, name);
+const secretPath = runtimePath('.agent-key.local');
+const apiTokenPath = runtimePath('.agent-api-token.local');
+const ownerPath = runtimePath('.owner-address.local');
+const ledgerPath = runtimePath('.agent-ledger.local.json');
+const ledgerTempPath = runtimePath('.agent-ledger.local.tmp');
 const identity = JSON.parse(readFileSync(new URL('frontend/agent-identity.json', root), 'utf8'));
 const service = JSON.parse(readFileSync(new URL('frontend/demo-service.json', root), 'utf8'));
-const signer = privateKeyToAccount(readText(secretPath));
+const privateKey = readEnv('AGENT_PRIVATE_KEY') || (existsSync(secretPath) ? readText(secretPath) : '');
+if (!privateKey) throw new Error('AGENT_PRIVATE_KEY or .agent-key.local is required.');
+const signer = privateKeyToAccount(privateKey);
+if (identity.address.toLowerCase() !== signer.address.toLowerCase()) {
+  throw new Error(`Configured agent key resolves to ${signer.address}, but the public identity is ${identity.address}.`);
+}
 const agentApiToken = readEnv('AGENT_SERVICE_TOKEN') || (() => {
   if (!existsSync(apiTokenPath)) writeFileSync(apiTokenPath, `${randomBytes(32).toString('hex')}\n`);
   return readText(apiTokenPath);
 })();
-const apiKey = readEnv('VITE_ALCHEMY_API_KEY');
-const gasPolicyId = readEnv('VITE_ALCHEMY_GAS_POLICY_ID');
+const apiKey = readEnv('ALCHEMY_API_KEY') || readEnv('VITE_ALCHEMY_API_KEY');
+const gasPolicyId = readEnv('ALCHEMY_GAS_POLICY_ID') || readEnv('VITE_ALCHEMY_GAS_POLICY_ID');
 
 const networks = {
-  421614: { chain: arbitrumSepolia, name: 'Arbitrum Sepolia', rpc: 'https://sepolia-rollup.arbitrum.io/rpc', bundler: 'https://api.candide.dev/public/v3/arbitrum-sepolia', policyPath: new URL('.policy-state.local.json', root), mode: 'candide' },
-  46630: { chain: robinhoodTestnet, name: 'Robinhood Chain Testnet', rpc: 'https://rpc.testnet.chain.robinhood.com', bundler: `https://robinhood-testnet.g.alchemy.com/v2/${apiKey}`, policyPath: new URL('.robinhood-policy-state.local.json', root), mode: 'alchemy' }
+  421614: { chain: arbitrumSepolia, name: 'Arbitrum Sepolia', rpc: 'https://sepolia-rollup.arbitrum.io/rpc', bundler: 'https://api.candide.dev/public/v3/arbitrum-sepolia', policyPath: runtimePath('.policy-state.local.json'), mode: 'candide' },
+  46630: { chain: robinhoodTestnet, name: 'Robinhood Chain Testnet', rpc: 'https://rpc.testnet.chain.robinhood.com', bundler: `https://robinhood-testnet.g.alchemy.com/v2/${apiKey}`, policyPath: runtimePath('.robinhood-policy-state.local.json'), mode: 'alchemy' }
 };
 const readJson = (path, fallback) => existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : fallback;
 const writeJson = (path, value) => {
