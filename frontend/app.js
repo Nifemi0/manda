@@ -4,7 +4,7 @@ import { robinhoodTestnet } from '@alchemy/common/chains';
 import { prepareSmartAccount, revokeAgentPolicy } from './smart-account.js';
 import { prepareRobinhoodAccount, revokeRobinhoodPolicy } from './robinhood-account.js';
 import { appendActivity, readProductState, savePolicy, writeProductState } from './state.js';
-import { agentFetch, clearAgentSession, createPaymentApproval, ensureAgentSession, readAgentSession } from './agent-session.js';
+import { agentFetch, createPaymentApproval, ensureAgentSession, readAgentSession } from './agent-session.js';
 import { policyIdentifier } from './policy-auth.js';
 
 const dashboardConnect = document.getElementById('dashboardConnect');
@@ -190,7 +190,7 @@ blockedPayment.addEventListener('click', () => runPayment('blocked'));
 
 function renderDashboardWallet({ address, network }) {
   connectedOwner = address || null;
-  if (!address) { clearAgentSession(); renderProductState(); return; }
+  if (!address) { renderProductState(); return; }
   ownerValue.textContent = MandaWallet.shortAddress(address);
   ownerNetwork.textContent = network ? `Verified through the wallet on ${network.name}.` : 'Wallet connected on an unsupported network.';
   accountHeadline.innerHTML = 'Human connected.<br>Smart account comes next.';
