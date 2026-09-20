@@ -13,7 +13,7 @@ let bundlerClient;
 export const robinhoodAccountConfig = { apiKeyReady: true, sponsorshipReady: true, chain: robinhoodTestnet };
 
 export async function prepareRobinhoodAccount(ownerAddress) {
-  const provider = SharedWallet.getProvider();
+  const provider = MandaWallet.getProvider();
   if (!provider) throw new Error('Connect the owner wallet first.');
   if (await provider.request({ method: 'eth_chainId' }) !== '0xb626') throw new Error('Switch the connected wallet to Robinhood Testnet first.');
   const walletClient = createWalletClient({ account: ownerAddress, chain: robinhoodTestnet, transport: custom(provider) });

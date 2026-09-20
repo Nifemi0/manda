@@ -4,6 +4,8 @@
     '0xb626': { name: 'Robinhood Chain Testnet', chainId: '0xb626', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 }, rpcUrls: ['https://rpc.testnet.chain.robinhood.com'], blockExplorerUrls: ['https://explorer.testnet.chain.robinhood.com'] }
   };
   const state = { address: null, chainId: null };
+  const OWNER_KEY = 'manda-owner';
+  const LEGACY_OWNER_KEY = 'shared-account-owner';
   const announcedProviders = [];
   let activeProvider = null;
   const provider = () => activeProvider || announcedProviders[0]?.provider || window.ethereum;
@@ -11,8 +13,11 @@
   const shortAddress = address => address ? `${address.slice(0, 6)}…${address.slice(-4)}` : '';
   function publish() {
     const detail = { ...state, network: network(state.chainId), supported: Boolean(network(state.chainId)) };
-    if (state.address) sessionStorage.setItem('shared-account-owner', JSON.stringify(detail));
-    else sessionStorage.removeItem('shared-account-owner');
+    if (state.address) sessionStorage.setItem(OWNER_KEY, JSON.stringify(detail));
+    else {
+      sessionStorage.removeItem(OWNER_KEY);
+      sessionStorage.removeItem(LEGACY_OWNER_KEY);
+    }
     window.dispatchEvent(new CustomEvent('walletstatechange', { detail }));
     return detail;
   }
@@ -54,8 +59,8 @@
     return refresh();
   }
   function bindProvider(candidate) {
-    if (!candidate || candidate.__sharedAccountBound) return;
-    try { Object.defineProperty(candidate, '__sharedAccountBound', { value: true }); } catch (_) {}
+    if (!candidate || candidate.__mandaBound) return;
+    try { Object.defineProperty(candidate, '__mandaBound', { value: true }); } catch (_) {}
     candidate.on?.('accountsChanged', accounts => { state.address = accounts[0] || null; publish(); });
     candidate.on?.('chainChanged', chainId => { state.chainId = chainId; publish(); });
   }
@@ -66,5 +71,5 @@
   });
   window.dispatchEvent(new Event('eip6963:requestProvider'));
   bindProvider(window.ethereum);
-  window.SharedWallet = { NETWORKS, connect, refresh, switchNetwork, shortAddress, getProvider: provider };
+  window.MandaWallet = { NETWORKS, connect, refresh, switchNetwork, shortAddress, getProvider: provider };
 })();

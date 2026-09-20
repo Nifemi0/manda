@@ -20,7 +20,7 @@ Manda is a human-owned smart-account payment identity that gives an AI agent nar
 
 ## Public documentation
 
-The built site includes a detailed reference at `/docs.html` and a machine-readable project map at `/llms.txt`. Both are generated from tracked source files under `frontend/` and `public/`.
+The built site includes a detailed reference at `/docs.html`, an interactive agent connection guide at `/agent.html`, and a machine-readable project map at `/llms.txt`. They are generated from tracked source files under `frontend/` and `public/`.
 
 ## Evidence hierarchy
 

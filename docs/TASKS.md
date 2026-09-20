@@ -35,6 +35,7 @@
 
 - [x] Build the public narrative landing page with the shared-identity story and demo entry.
 - [x] Build the public technical documentation route, source documentation index, and `llms.txt` product map.
+- [x] Build the agent connection route with service health, owner-session verification, policy inspection, and copy-ready adapters.
 - [x] Add consistent Manda branding, navigation links, network evidence, and detailed footers across every page.
 - [x] Promote the content-rich depth direction to the primary landing route.
 - [x] Build the four-step onboarding flow for owner, smart account, agent mandate, and review.

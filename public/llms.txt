@@ -8,6 +8,7 @@ Manda uses an ERC-4337 Modular Account V2 owned by a human wallet. An AI agent u
 
 - [Product overview](/): Product thesis, authority model, payment path, supported use cases, and FAQs.
 - [Documentation](/docs.html): Architecture, policy reference, agent API, verified network evidence, security boundaries, and local setup.
+- [Agent connection](/agent.html): Service health, owner-authenticated mandate inspection, and ready-to-copy JavaScript, Python, cURL, and tool-schema integrations.
 - [Identity setup](/onboarding.html): Connect an owner, prepare the smart account, configure a mandate, and review before signing.
 - [Control room](/app.html): Inspect ownership, active policy, balances, attributed activity, sponsorship, and revocation controls.
 

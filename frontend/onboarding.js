@@ -91,7 +91,7 @@ function renderWallet({ address, network, supported }) {
     networkActions.hidden = true;
     return;
   }
-  walletHeading.textContent = SharedWallet.shortAddress(address);
+  walletHeading.textContent = MandaWallet.shortAddress(address);
   if (currentChainId && currentChainId !== network?.chainId) preparedAccount = null;
   currentChainId = network?.chainId;
   connectedOwner = address;
@@ -100,7 +100,7 @@ function renderWallet({ address, network, supported }) {
   connectButton.innerHTML = 'Wallet connected <span>✓</span>';
   networkActions.hidden = false;
   document.querySelectorAll('[data-chain]').forEach(button => button.classList.toggle('current', button.dataset.chain === network?.chainId));
-  document.getElementById('reviewOwner').textContent = SharedWallet.shortAddress(address);
+  document.getElementById('reviewOwner').textContent = MandaWallet.shortAddress(address);
   document.getElementById('reviewNetwork').textContent = network?.name || 'Unsupported network';
   const selectedPolicy = network ? policyForChain(Number.parseInt(network.chainId, 16)) : null;
   if (selectedPolicy) applySavedPolicy(selectedPolicy);
@@ -125,7 +125,7 @@ accountAction.addEventListener('click', async () => {
       preparedAccount.chainId = isRobinhood ? robinhoodAccountConfig.chain.id : smartAccountConfig.chain.id;
       if (isRobinhood) saveRobinhoodAccount({ owner: connectedOwner, address: preparedAccount.address, deployed: preparedAccount.deployed });
       else saveSmartAccount({ owner: connectedOwner, address: preparedAccount.address, chainId: smartAccountConfig.chain.id, deployed: preparedAccount.deployed });
-      document.getElementById('reviewAccount').textContent = SharedWallet.shortAddress(preparedAccount.address);
+      document.getElementById('reviewAccount').textContent = MandaWallet.shortAddress(preparedAccount.address);
       accountActionNote.textContent = preparedAccount.deployed
         ? 'This Modular Account V2 is already deployed.'
         : preparedAccount.sponsored ? 'Address prepared. Deployment will request one signature.' : 'Address prepared. Add a gas policy before deployment.';
@@ -142,8 +142,8 @@ accountAction.addEventListener('click', async () => {
     const result = isRobinhood ? await deployRobinhoodAccount() : await deploySmartAccount();
     if (isRobinhood) saveRobinhoodAccount({ owner: connectedOwner, address: result.address, deployed: true, transactionHash: result.transactionHash, userOperationHash: result.userOperationHash });
     else saveSmartAccount({ owner: connectedOwner, address: result.address, chainId: smartAccountConfig.chain.id, deployed: true, transactionHash: result.transactionHash, userOperationHash: result.userOperationHash });
-    document.getElementById('reviewAccount').textContent = SharedWallet.shortAddress(result.address);
-    accountActionNote.textContent = `Deployed in transaction ${SharedWallet.shortAddress(result.transactionHash)}.`;
+    document.getElementById('reviewAccount').textContent = MandaWallet.shortAddress(result.address);
+    accountActionNote.textContent = `Deployed in transaction ${MandaWallet.shortAddress(result.transactionHash)}.`;
     accountAction.textContent = 'Smart identity deployed ✓';
   } catch (error) {
     console.error('Smart account action failed', error);
@@ -165,7 +165,7 @@ async function loadPolicyInputs() {
     fetch('./demo-service.json').then(response => response.json())
   ]);
   agentIdentity = agent;
-  document.getElementById('agentAddress').textContent = `AGENT KEY · ${SharedWallet.shortAddress(agent.address)}`;
+  document.getElementById('agentAddress').textContent = `AGENT KEY · ${MandaWallet.shortAddress(agent.address)}`;
   policyRecipient.value = service.address;
   const savedPolicy = readProductState().policy;
   if (savedPolicy) applySavedPolicy(savedPolicy);
@@ -192,7 +192,7 @@ function applySavedPolicy(savedPolicy) {
   approvalThreshold.value = savedPolicy.approvalThresholdWei ? formatEther(BigInt(savedPolicy.approvalThresholdWei)) : formatEther(BigInt(savedPolicy.perPaymentWei) / 4n);
   balanceFloor.value = savedPolicy.balanceFloorWei ? formatEther(BigInt(savedPolicy.balanceFloorWei)) : '0.001';
   policyStatus.textContent = savedPolicy.status === 'active'
-    ? `Active onchain · ${Number(savedPolicy.chainId) === 46630 ? 'Robinhood' : 'Arbitrum'} · ${SharedWallet.shortAddress(savedPolicy.transactionHash)}`
+    ? `Active onchain · ${Number(savedPolicy.chainId) === 46630 ? 'Robinhood' : 'Arbitrum'} · ${MandaWallet.shortAddress(savedPolicy.transactionHash)}`
     : 'Revoked mandate loaded. A new entity can now be installed.';
   policyAction.disabled = savedPolicy.status === 'active';
   policyAction.textContent = savedPolicy.status === 'active' ? 'Revoke active mandate before replacing' : 'Review and sign mandate';
@@ -244,13 +244,13 @@ mandateForm.addEventListener('submit', async event => {
     };
     await registerPolicy(savedPolicy);
     savePolicy(savedPolicy);
-    policyStatus.textContent = `Active onchain · ${SharedWallet.shortAddress(result.transactionHash)}`;
+    policyStatus.textContent = `Active onchain · ${MandaWallet.shortAddress(result.transactionHash)}`;
     policyAction.textContent = 'Mandate installed ✓';
     document.getElementById('reviewPolicy').textContent = `${agentLabel.value.trim()} · active until ${new Date(policyExpiry.value).toLocaleString()}`;
   } catch (error) {
     console.error('Policy installation failed', error);
     try {
-      localStorage.setItem('shared-account:last-policy-error', JSON.stringify({
+      localStorage.setItem('manda:last-policy-error', JSON.stringify({
         message: error?.message || String(error),
         time: new Date().toISOString()
       }));
@@ -265,7 +265,7 @@ mandateForm.addEventListener('submit', async event => {
 connectButton.addEventListener('click', async () => {
   connectButton.disabled = true;
   walletNote.textContent = 'Waiting for wallet approval…';
-  try { renderWallet(await SharedWallet.connect()); }
+  try { renderWallet(await MandaWallet.connect()); }
   catch (error) { showWalletError(error); walletNote.textContent = 'Connection was not completed.'; }
   finally { connectButton.disabled = false; }
 });
@@ -273,12 +273,12 @@ connectButton.addEventListener('click', async () => {
 networkActions.addEventListener('click', async event => {
   const button = event.target.closest('[data-chain]');
   if (!button) return;
-  try { renderWallet(await SharedWallet.switchNetwork(button.dataset.chain)); }
+  try { renderWallet(await MandaWallet.switchNetwork(button.dataset.chain)); }
   catch (error) { showWalletError(error); }
 });
 
 window.addEventListener('walletstatechange', event => renderWallet(event.detail));
 agentLabel.addEventListener('input', renderPolicyDraft);
 agentPurpose.addEventListener('change', renderPolicyDraft);
-SharedWallet.refresh().then(renderWallet).catch(showWalletError);
+MandaWallet.refresh().then(renderWallet).catch(showWalletError);
 loadPolicyInputs().catch(showWalletError);

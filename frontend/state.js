@@ -1,7 +1,13 @@
-const STORAGE_KEY = 'shared-account:v1';
+const STORAGE_KEY = 'manda:v1';
+const LEGACY_STORAGE_KEY = 'shared-account:v1';
 
 export function readProductState() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+    const value = JSON.parse(raw || '{}');
+    if (!localStorage.getItem(STORAGE_KEY) && raw) localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+    return value;
+  }
   catch { return {}; }
 }
 

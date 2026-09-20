@@ -19,7 +19,7 @@ export const smartAccountConfig = {
 };
 
 export async function prepareSmartAccount(ownerAddress) {
-  const provider = SharedWallet.getProvider();
+  const provider = MandaWallet.getProvider();
   if (!provider) throw new Error('Connect the owner wallet first.');
   const chainId = await provider.request({ method: 'eth_chainId' });
   if (chainId !== '0x66eee') throw new Error('Switch the connected wallet to Arbitrum Sepolia first.');

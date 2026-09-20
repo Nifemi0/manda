@@ -270,6 +270,16 @@ createServer(async (req, res) => {
       const activity = readJson(ledgerPath, []).filter(item => !session || !item.ownerAddress || item.ownerAddress.toLowerCase() === session.ownerAddress.toLowerCase());
       return respond(res, 200, { activity });
     }
+    if (req.method === 'GET' && url.pathname === '/policy') {
+      const chainId = Number(url.searchParams.get('chainId'));
+      const path = policyFor(chainId);
+      if (!path) return respond(res, 400, { error: 'A supported chainId is required.' });
+      const loaded = readJson(path, null);
+      if (!loaded) return respond(res, 404, { error: 'No policy is installed for this network.' });
+      const policy = normalizedPolicy(loaded);
+      if (!requestAuthorized(req, policy)) return respond(res, 401, { error: 'A verified owner session or agent service token is required.' });
+      return respond(res, 200, { policy });
+    }
     if (req.method === 'POST' && url.pathname === '/policy') {
       const body = await bodyJson(req);
       const policy = normalizedPolicy(body.policy);

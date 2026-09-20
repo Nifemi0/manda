@@ -39,7 +39,7 @@ function renderActivity(items = []) {
   body.innerHTML = `<div class="activity-columns"><span>ACTOR</span><span>INTENT</span><span>POLICY RESULT</span><span>NETWORK</span><span>EVIDENCE</span></div>${items.map(item => {
     const explorer = Number(item.chainId) === 46630 ? 'https://explorer.testnet.chain.robinhood.com/tx/' : 'https://sepolia.arbiscan.io/tx/';
     const validHash = /^0x[0-9a-f]{64}$/i.test(item.transactionHash || '');
-    const evidence = validHash ? `<a target="_blank" rel="noreferrer" href="${explorer}${item.transactionHash}">${SharedWallet.shortAddress(item.transactionHash)} ↗</a>` : '<span>Policy decision</span>';
+    const evidence = validHash ? `<a target="_blank" rel="noreferrer" href="${explorer}${item.transactionHash}">${MandaWallet.shortAddress(item.transactionHash)} ↗</a>` : '<span>Policy decision</span>';
     return `<div class="activity-row"><b>${escapeHtml(item.actor)}</b><span>${escapeHtml(item.intent)}</span><strong class="${escapeHtml(item.status)}">${escapeHtml(item.reason || item.status)}</strong><span>${escapeHtml(item.network)}</span>${evidence}</div>`;
   }).join('')}`;
 }
@@ -56,7 +56,7 @@ function renderProductState(state = readProductState()) {
   const account = policyIsRobinhood ? (state.robinhoodAccount || state.smartAccount) : (state.smartAccount || state.robinhoodAccount);
   renderActivity(state.activity || []);
   if (!account?.address) return;
-  const short = SharedWallet.shortAddress(account.address);
+  const short = MandaWallet.shortAddress(account.address);
   document.getElementById('smartAccountValue').textContent = short;
   document.getElementById('smartAccountDescription').textContent = account.deployed ? `Modular Account V2 bytecode verified on ${policyIsRobinhood ? 'Robinhood Chain Testnet' : 'Arbitrum Sepolia'}.` : 'Counterfactual address prepared; deployment is still required.';
   document.getElementById('arbitrumStatus').textContent = account.deployed ? 'DEPLOYED' : 'PREPARED';
@@ -64,7 +64,7 @@ function renderProductState(state = readProductState()) {
   const robinhood = state.robinhoodAccount;
   if (robinhood?.address) {
     document.getElementById('robinhoodStatus').textContent = robinhood.deployed ? 'DEPLOYED' : 'PREPARED';
-    document.getElementById('robinhoodDetail').textContent = `${robinhood.deployed ? 'Verified' : 'Prepared'} smart identity ${SharedWallet.shortAddress(robinhood.address)}.`;
+    document.getElementById('robinhoodDetail').textContent = `${robinhood.deployed ? 'Verified' : 'Prepared'} smart identity ${MandaWallet.shortAddress(robinhood.address)}.`;
   }
   if (account.transactionHash) {
     const evidence = document.getElementById('smartAccountEvidence');
@@ -106,7 +106,7 @@ function renderProductState(state = readProductState()) {
       : `The human-owned smart account is verified on ${policyNetwork}. Delegated authority remains disabled until a policy is installed.`)
     : accountDescription.textContent;
   authorityStatus.innerHTML = account.deployed ? 'SMART IDENTITY<br>DEPLOYED' : authorityStatus.innerHTML;
-  const footerState = document.querySelector('footer p:last-child');
+  const footerState = document.getElementById('footerState');
   if (footerState) footerState.innerHTML = `<i></i> ${activePolicy ? `LIVE POLICY LOADED · ${Number(policy.chainId) === 46630 ? 'ROBINHOOD CHAIN TESTNET' : 'ARBITRUM SEPOLIA'}` : 'NO ACTIVE POLICY LOADED'}`;
 }
 
@@ -147,7 +147,7 @@ async function runPayment(kind) {
     await syncAgentActivity();
     paymentResult.className = `payment-result ${result.status}`;
     paymentResult.querySelector('span').textContent = result.status === 'confirmed'
-      ? `Confirmed · ${SharedWallet.shortAddress(result.transactionHash)}`
+      ? `Confirmed · ${MandaWallet.shortAddress(result.transactionHash)}`
       : `Blocked · ${result.reason}`;
   } catch (error) {
     paymentResult.className = 'payment-result failed'; paymentResult.querySelector('span').textContent = error.message;
@@ -165,7 +165,7 @@ blockedPayment.addEventListener('click', () => runPayment('blocked'));
 function renderDashboardWallet({ address, network }) {
   connectedOwner = address || null;
   if (!address) { clearAgentSession(); renderProductState(); return; }
-  ownerValue.textContent = SharedWallet.shortAddress(address);
+  ownerValue.textContent = MandaWallet.shortAddress(address);
   ownerNetwork.textContent = network ? `Verified through the wallet on ${network.name}.` : 'Wallet connected on an unsupported network.';
   accountHeadline.innerHTML = 'Human connected.<br>Smart account comes next.';
   accountDescription.textContent = 'The root owner is verified from the connected wallet. No smart account, mandate, balance, or activity is claimed yet.';
@@ -177,7 +177,7 @@ function renderDashboardWallet({ address, network }) {
 
 dashboardConnect.addEventListener('click', async () => {
   dashboardConnect.disabled = true; dashboardConnect.textContent = 'Waiting for wallet…';
-  try { renderDashboardWallet(await SharedWallet.connect()); }
+  try { renderDashboardWallet(await MandaWallet.connect()); }
   catch (error) { dashboardConnect.textContent = error.code === 4001 ? 'Connection declined' : 'Wallet unavailable'; }
   finally { if (!ownerValue.textContent.includes('…')) dashboardConnect.disabled = false; }
 });
@@ -191,7 +191,7 @@ revokeAgent.addEventListener('click', async () => {
     if (!connectedOwner || connectedOwner.toLowerCase() !== ownerAddress?.toLowerCase()) throw new Error('Connect the policy owner before revoking this mandate.');
     const isRobinhood = Number(state.policy.chainId) === 46630;
     await ensureAgentSession(ownerAddress);
-    await SharedWallet.switchNetwork(isRobinhood ? '0xb626' : '0x66eee');
+    await MandaWallet.switchNetwork(isRobinhood ? '0xb626' : '0x66eee');
     if (isRobinhood) await prepareRobinhoodAccount(ownerAddress); else await prepareSmartAccount(ownerAddress);
     const result = isRobinhood
       ? await revokeRobinhoodPolicy({ entityId: state.policy.entityId, recipient: state.policy.recipient })
@@ -209,5 +209,5 @@ revokeAgent.addEventListener('click', async () => {
 
 window.addEventListener('walletstatechange', event => renderDashboardWallet(event.detail));
 window.addEventListener('productstatechange', event => renderProductState(event.detail));
-SharedWallet.refresh().then(renderDashboardWallet).catch(() => {});
+MandaWallet.refresh().then(renderDashboardWallet).catch(() => {});
 renderProductState();

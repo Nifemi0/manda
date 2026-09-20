@@ -1,9 +1,10 @@
 import { paymentApprovalMessage, policyRegistrationMessage } from './policy-auth.js';
 
-const SESSION_KEY = 'shared-account:agent-session:v1';
+const SESSION_KEY = 'manda:agent-session:v1';
+const LEGACY_SESSION_KEY = 'shared-account:agent-session:v1';
 
 async function signMessage(ownerAddress, message) {
-  const provider = SharedWallet.getProvider();
+  const provider = MandaWallet.getProvider();
   if (!provider) throw new Error('Connect the owner wallet first.');
   const active = (await provider.request({ method: 'eth_accounts' }))[0];
   if (!active || active.toLowerCase() !== ownerAddress.toLowerCase()) {
@@ -19,12 +20,15 @@ async function signMessage(ownerAddress, message) {
 
 export function clearAgentSession() {
   sessionStorage.removeItem(SESSION_KEY);
+  sessionStorage.removeItem(LEGACY_SESSION_KEY);
 }
 
 export function readAgentSession(ownerAddress) {
   try {
-    const value = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+    const raw = sessionStorage.getItem(SESSION_KEY) || sessionStorage.getItem(LEGACY_SESSION_KEY);
+    const value = JSON.parse(raw || 'null');
     if (!value || value.ownerAddress?.toLowerCase() !== ownerAddress?.toLowerCase() || value.expiresAt <= Date.now()) return null;
+    if (!sessionStorage.getItem(SESSION_KEY)) sessionStorage.setItem(SESSION_KEY, JSON.stringify(value));
     return value;
   } catch { return null; }
 }

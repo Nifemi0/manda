@@ -35,6 +35,7 @@ export default defineConfig(({ mode }) => {
       input: {
         landing: resolve(import.meta.dirname, 'frontend/index.html'),
         docs: resolve(import.meta.dirname, 'frontend/docs.html'),
+        agent: resolve(import.meta.dirname, 'frontend/agent.html'),
         onboarding: resolve(import.meta.dirname, 'frontend/onboarding.html'),
         control: resolve(import.meta.dirname, 'frontend/app.html')
       }

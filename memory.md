@@ -8,6 +8,7 @@ Last updated: 2026-09-20
 - The primary line is **Give agents permission, not your wallet.**
 - Every public page now uses the Manda brand, shared navigation targets, and a detailed footer linking the product, documentation, source repository, and verified network evidence.
 - The public documentation route is `frontend/docs.html`; the source documentation index is `docs/README.md`; machine-readable product context is served from `/llms.txt` via `public/llms.txt`.
+- The agent integration route is `frontend/agent.html`. It detects service health, verifies a short-lived owner session, reads the private policy endpoint, and generates copy-ready JavaScript, Python, cURL, and tool-schema adapters without displaying secrets.
 - Build a payment product rather than a freelance marketplace.
 - The central concept is one programmable financial identity shared between a human and their personal AI agent.
 - The human is the root owner.

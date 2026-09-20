@@ -2,6 +2,8 @@
 
 The agent service exposes a narrow payment interface at `http://127.0.0.1:4174`. In the browser application, requests are proxied through `/api/agent` so the frontend never receives the delegated private key or server credentials.
 
+The interactive connection guide at `/agent.html` checks service availability, creates an owner-authenticated browser session, reads the selected mandate, and generates adapters for common agent runtimes. It never renders the bearer token or delegated private key.
+
 ## Authentication
 
 Private routes accept one of two authenticated callers:

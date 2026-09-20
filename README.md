@@ -41,6 +41,7 @@ The agent completes a small approved payment, a larger unauthorized payment is b
 
 - `/` — product story, mechanism, supported networks, and entry point.
 - `/docs.html` — technical model, policy reference, agent API, evidence, and setup.
+- `/agent.html` — live service detection, owner-authenticated policy inspection, and copy-ready agent adapters.
 - `/onboarding.html` — owner connection, smart-account preparation, mandate configuration, and review.
 - `/app.html` — live control room for policy, balances, payments, activity, and revocation.
 - `/llms.txt` — concise machine-readable project context and canonical links.
