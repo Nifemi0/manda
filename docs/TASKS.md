@@ -77,5 +77,3 @@
 5. Replace every empty state with verified account and transaction data.
 6. Capture evidence from both chains.
 7. Add routing and bridging only if the core demo is stable.
-
-

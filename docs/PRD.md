@@ -72,4 +72,3 @@ An under-the-hood bridge or rebalancer may move funds when the selected chain ha
 ## Honest product status
 
 This document records the selected concept and intended scope. It does not claim that contracts, deployments, integrations, or users currently exist.
-

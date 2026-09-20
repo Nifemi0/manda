@@ -1,6 +1,6 @@
 # Locked Frontend Direction
 
-Status: **Direction locked for the first prototype**  
+Status: **Direction locked for the first prototype**
 Direction name: **Authority Console**
 
 ## Product perception

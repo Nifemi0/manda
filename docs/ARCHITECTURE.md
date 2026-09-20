@@ -93,4 +93,3 @@ For the hackathon demo, both accounts should be pre-funded. Bridging is an enhan
 - Test token and faucet on Robinhood testnet.
 - Whether MPP supports the desired Robinhood deployment and token.
 - Bridge provider, only if the optional rebalancer is built.
-

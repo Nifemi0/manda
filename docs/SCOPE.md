@@ -1,6 +1,6 @@
 # Locked Hackathon Scope
 
-Status: **Locked for the first working prototype**  
+Status: **Locked for the first working prototype**
 Locked on: 2026-09-19
 
 ## Product promise

@@ -76,4 +76,3 @@ The selected direction is **Authority Console**: a precise payment-operations da
 - Keep transaction status text explicit.
 - Ensure keyboard access to payment and revocation controls.
 - Provide readable address truncation with full values available on demand.
-
