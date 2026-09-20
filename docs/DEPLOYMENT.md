@@ -20,3 +20,5 @@ Required production environment values are documented in `.env.example`. `AGENT_
 Copy `deploy/manda.service` to `/etc/systemd/system/manda.service` and `deploy/nginx.conf` to `/etc/nginx/sites-available/manda`. Enable the site, validate Nginx with `nginx -t`, then enable the service with `systemctl enable --now manda`.
 
 Point a domain at the VPS before using Certbot. HTTPS is required before exposing agent credentials or using the production wallet flow.
+
+The Vercel frontend uses the catch-all function at `api/agent/[...path].js`. Set `MANDA_BACKEND_ORIGIN` in Vercel to the HTTPS origin that exposes the private agent service. The proxy forwards only the documented Manda agent routes and never stores the delegated key or Alchemy credentials.
