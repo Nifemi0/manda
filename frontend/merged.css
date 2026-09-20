@@ -1,0 +1,18 @@
+:root{--wine:#b20d35;--wine2:#c40b43;--ink:#101412;--paper:#ffe3b3;--cream:#fff2d1;--coral:#ff7045;--blue:#335cff;--mint:#83e8bd;--yellow:#ffd447;--pink:#ff98b8}
+body{background:#063f3d}.grain{opacity:.035}
+header{color:var(--paper);background:rgba(3,45,44,.72);backdrop-filter:blur(18px)}
+.logo>span{background:var(--yellow);color:var(--ink);border-color:var(--ink);box-shadow:4px 4px 0 var(--coral)}
+header .open{background:var(--yellow);box-shadow:5px 5px 0 var(--orange)}
+.hero{background:radial-gradient(circle at 78% 30%,rgba(51,92,255,.32),transparent 29rem),radial-gradient(circle at 14% 74%,rgba(255,112,69,.17),transparent 27rem),#063f3d}
+.hero h1{font-family:var(--sans);font-weight:700;letter-spacing:-.075em}.hero h1 em{font-family:var(--serif);font-weight:500;color:var(--yellow)}
+.actions a:first-child{background:var(--yellow);box-shadow:6px 6px 0 var(--coral)}
+.passport-book{background:linear-gradient(145deg,#c40b43,#9b082f);box-shadow:18px 20px 0 #063f3d,28px 30px 0 var(--coral)}
+.passport-book h2{font-family:var(--sans);font-weight:700;letter-spacing:-.05em}.owner-stamp{background:var(--yellow)}.revoke-stamp{background:var(--pink)}.micro-card{background:var(--mint)}
+.ticker{background:var(--red);color:var(--paper)}.ticker b{color:var(--yellow)}
+.manifesto,.mandate{background:var(--paper)}.mandate-title h2{font-family:var(--sans);font-weight:700;letter-spacing:-.06em}.mandate-title h2 em{font-family:var(--serif);font-weight:500;color:var(--red)}
+.passport-open{filter:drop-shadow(15px 18px 0 rgba(3,63,61,.3))}.page{background:var(--cream)}
+.visa.coral{background:var(--coral)}.visa.blue{background:var(--blue)}.visa.mint{background:var(--mint)}.visa.yellow{background:var(--yellow)}
+.inspection{background:var(--orange);color:var(--ink)}.inspection h2{font-family:var(--sans);font-weight:700;letter-spacing:-.065em}.inspection-copy>p:last-child{color:rgba(16,20,18,.7)}.request-card{background:var(--paper)}.checkpoint{background:var(--yellow)}.decision.allowed{background:var(--mint)}.decision.denied{background:var(--pink)}
+.networks{background:var(--blue)}.network-copy h2{font-family:var(--sans);font-weight:700;letter-spacing:-.065em}.network-copy h2 em{font-family:var(--serif);font-weight:500;color:var(--yellow)}.network-visa.arb{background:var(--yellow)}.network-visa.rob{background:var(--pink)}
+.closing{background:#063f3d}.closing h2{font-family:var(--sans);font-weight:700;letter-spacing:-.07em}.closing h2 em{font-family:var(--serif);font-weight:500;color:var(--pink)}.big-stamp{border-color:var(--yellow);color:var(--yellow)}.closing>a{background:var(--yellow);box-shadow:6px 6px 0 var(--coral)}
+footer{background:var(--paper)}

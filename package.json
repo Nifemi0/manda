@@ -1,0 +1,23 @@
+{
+  "name": "manda",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 4173",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "start": "node scripts/app-server.mjs",
+    "agent:key": "node scripts/generate-agent-key.mjs",
+    "agent:serve": "node scripts/agent-service.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@alchemy/aa-infra": "5.2.6",
+    "@alchemy/common": "5.2.6",
+    "@alchemy/smart-accounts": "5.2.6",
+    "viem": "2.56.8"
+  },
+  "devDependencies": {
+    "vite": "8.3.0"
+  }
+}
