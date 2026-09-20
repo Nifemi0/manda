@@ -23,6 +23,9 @@ let connectedOwner = null;
 let currentPolicy = null;
 let status = null;
 let activeSnippet = 'javascript';
+const isLocal = ['127.0.0.1', 'localhost'].includes(window.location.hostname);
+const serviceUrl = isLocal ? 'http://127.0.0.1:4174' : `${window.location.origin}/api/agent`;
+document.getElementById('serviceUrl').textContent = serviceUrl;
 
 const short = value => value ? `${value.slice(0, 6)}…${value.slice(-4)}` : '—';
 const formatWei = value => {
@@ -45,7 +48,6 @@ const setBadge = (element, text, kind = '') => {
 
 function snippets() {
   const recipient = currentPolicy?.recipient || '0xApprovedService';
-  const serviceUrl = 'http://127.0.0.1:4174';
   return {
     javascript: {
       label: 'manda-payment.js',
@@ -195,7 +197,7 @@ async function loadStatus() {
   } catch (error) {
     serviceStatus.textContent = 'Agent service unavailable';
     setBadge(serviceBadge, 'OFFLINE', 'warn');
-    policyStatus.textContent = 'Start npm run agent:serve';
+    policyStatus.textContent = isLocal ? 'Start npm run agent:serve' : 'Backend deployment needs attention';
     setBadge(policyBadge, 'WAITING', 'warn');
     overallStatus.className = '';
     overallStatus.innerHTML = '<i></i> SERVICE OFFLINE';

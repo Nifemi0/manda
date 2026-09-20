@@ -27,7 +27,7 @@
     </section>
 
     <section class="connection-details">
-      <article><span>SERVICE URL</span><strong id="serviceUrl">http://127.0.0.1:4174</strong><p>Your agent runtime calls this local service directly. The browser uses the same-origin `/api/agent` proxy.</p></article>
+      <article><span>SERVICE URL</span><strong id="serviceUrl">/api/agent</strong><p>The live site and external agent runtimes use the guarded HTTPS API. Local development connects directly to the loopback service.</p></article>
       <article><span>AUTHENTICATION</span><strong>Bearer token</strong><p>Load `MANDA_AGENT_TOKEN` from the ignored `.agent-api-token.local` file or your deployment secret manager.</p></article>
       <article><span>PAYMENT TOOL</span><strong>POST /pay</strong><p>Send a unique request ID, supported chain, approved recipient, and positive amount in wei.</p></article>
     </section>
