@@ -11,3 +11,5 @@ dist/
 .agent-ledger.local.json
 .agent-ledger.local.tmp
 !.env.example
+
+.vercel
