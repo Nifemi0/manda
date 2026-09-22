@@ -13,7 +13,7 @@
   <header class="proof-nav">
     <a href="index.html" class="proof-brand" aria-label="Manda home"><span><i></i></span><strong>MANDA</strong></a>
     <nav aria-label="Main navigation"><a href="index.html">Overview</a><a class="active" href="proof.html">Live proof</a><a href="agent.html">Agent connection</a><a href="docs.html">Docs</a></nav>
-    <a class="nav-action" href="app.html">Open control room <span>↗</span></a>
+    <a class="nav-action" href="app.html">Open control room <span><svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-external"></use></svg></span></a>
   </header>
 
   <main>
@@ -22,7 +22,7 @@
         <p class="eyebrow"><i id="heroDot"></i> PUBLIC VERIFICATION</p>
         <h1>Trust the<br><em>evidence.</em></h1>
         <p class="hero-lede">Manda is a working payment identity shared by a human and an AI agent. This page exposes the live service state, active testnet mandates, and confirmed onchain payments without requiring a wallet connection.</p>
-        <div class="hero-actions"><a class="primary-action" href="#network-proof">Inspect transactions <span>↓</span></a><a class="text-action" href="https://github.com/Nifemi0/manda" target="_blank" rel="noreferrer">Review source ↗</a></div>
+        <div class="hero-actions"><a class="primary-action" href="#network-proof">Inspect transactions <span><svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-arrow-down"></use></svg></span></a><a class="text-action" href="https://github.com/Nifemi0/manda" target="_blank" rel="noreferrer">Review source <svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-external"></use></svg></a></div>
       </div>
       <aside class="service-card" aria-live="polite">
         <div class="service-head"><span>AGENT SERVICE</span><b id="serviceBadge">CHECKING</b></div>
@@ -46,19 +46,19 @@
           <header><span class="network-mark">A</span><div><small>CHAIN ID 421614</small><h3>Arbitrum Sepolia</h3></div><b id="arbPolicy">CHECKING</b></header>
           <p>Owner-authenticated production payment through the deployed Vercel-to-VPS path with Candide sponsorship.</p>
           <dl><div><dt>Amount</dt><dd>0.0000001 ETH</dd></div><div><dt>Receipt</dt><dd>Success · block 310901837</dd></div><div><dt>Transaction</dt><dd>0x9529…8d2b</dd></div></dl>
-          <a href="https://sepolia.arbiscan.io/tx/0x952916eb8280a0a30972edfa181f337fc0d3bbbe4d6fb390289935dc27558d2b" target="_blank" rel="noreferrer">Open confirmed transaction <span>↗</span></a>
+          <a href="https://sepolia.arbiscan.io/tx/0x952916eb8280a0a30972edfa181f337fc0d3bbbe4d6fb390289935dc27558d2b" target="_blank" rel="noreferrer">Open confirmed transaction <span><svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-external"></use></svg></span></a>
         </article>
         <article class="network-card robinhood">
           <header><span class="network-mark">R</span><div><small>CHAIN ID 46630</small><h3>Robinhood Testnet</h3></div><b id="robinhoodPolicy">CHECKING</b></header>
           <p>Authenticated payment through the independent Robinhood execution path with Alchemy Bundler and Gas Manager.</p>
           <dl><div><dt>Amount</dt><dd>1 wei</dd></div><div><dt>Receipt</dt><dd>Success · block 122007013</dd></div><div><dt>Transaction</dt><dd>0x0632…42f3</dd></div></dl>
-          <a href="https://explorer.testnet.chain.robinhood.com/tx/0x063219ecd3b3c8913ca40f3eba470dd16fa66d552c9ea95e4a62f645035142f3" target="_blank" rel="noreferrer">Open confirmed transaction <span>↗</span></a>
+          <a href="https://explorer.testnet.chain.robinhood.com/tx/0x063219ecd3b3c8913ca40f3eba470dd16fa66d552c9ea95e4a62f645035142f3" target="_blank" rel="noreferrer">Open confirmed transaction <span><svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-external"></use></svg></span></a>
         </article>
       </div>
     </section>
 
     <section class="decision-proof">
-      <div class="decision-copy"><p>THE POLICY IS THE PRODUCT</p><h2>Approved work moves.<br>Excess stops.</h2><span>An agent request is authenticated, bound to one chain and recipient, checked against owner-defined limits, then either sponsored or rejected before value moves.</span><a href="docs.html#policy">Read the policy reference ↗</a></div>
+      <div class="decision-copy"><p>THE POLICY IS THE PRODUCT</p><h2>Approved work moves.<br>Excess stops.</h2><span>An agent request is authenticated, bound to one chain and recipient, checked against owner-defined limits, then either sponsored or rejected before value moves.</span><a href="docs.html#policy">Read the policy reference <svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-external"></use></svg></a></div>
       <div class="decision-ledger">
         <article class="approved"><div><small>VERIFIED OUTCOME</small><b>CONFIRMED</b></div><h3>Routine payment</h3><p>Within the active recipient and value limits.</p><dl><div><dt>Actor</dt><dd>Delegated agent</dd></div><div><dt>Network</dt><dd>Arbitrum Sepolia</dd></div><div><dt>Evidence</dt><dd>Onchain receipt</dd></div></dl></article>
         <article class="blocked"><div><small>VERIFIED OUTCOME</small><b>BLOCKED</b></div><h3>Excess payment</h3><p>Rejected with <code>PAYMENT_LIMIT_EXCEEDED</code>.</p><dl><div><dt>Actor</dt><dd>Delegated agent</dd></div><div><dt>Value moved</dt><dd>None</dd></div><div><dt>Evidence</dt><dd>Service ledger</dd></div></dl></article>
@@ -67,12 +67,12 @@
 
     <section class="reviewer-path">
       <div><p>REVIEW THE BUILD</p><h2>Everything a judge needs.</h2></div>
-      <div class="review-links"><a href="app.html"><span>Product</span><strong>Open the control room</strong><i>↗</i></a><a href="agent.html"><span>Integration</span><strong>Inspect the agent API</strong><i>↗</i></a><a href="docs.html"><span>Architecture</span><strong>Read technical documentation</strong><i>↗</i></a><a href="https://github.com/Nifemi0/manda/blob/main/CLAIMS.md" target="_blank" rel="noreferrer"><span>Claims</span><strong>Audit the evidence matrix</strong><i>↗</i></a></div>
+      <div class="review-links"><a href="app.html"><span>Product</span><strong>Open the control room</strong><i><svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-external"></use></svg></i></a><a href="agent.html"><span>Integration</span><strong>Inspect the agent API</strong><i><svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-external"></use></svg></i></a><a href="docs.html"><span>Architecture</span><strong>Read technical documentation</strong><i><svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-external"></use></svg></i></a><a href="https://github.com/Nifemi0/manda/blob/main/CLAIMS.md" target="_blank" rel="noreferrer"><span>Claims</span><strong>Audit the evidence matrix</strong><i><svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-external"></use></svg></i></a></div>
       <aside><strong>Honest boundary</strong><p>Manda uses testnet funds. Automatic routing, bridging, swaps, and production custody are outside the verified scope. Live owner-signed revocation is implemented but has not yet been captured as onchain evidence.</p></aside>
     </section>
   </main>
 
-  <footer class="site-footer"><div class="footer-lead"><div><a class="footer-brand" href="index.html"><span><i></i></span>MANDA</a><h2>Evidence before promises.</h2></div><a class="footer-cta" href="app.html">Open control room <span>↗</span></a></div><div class="footer-grid"><p class="footer-summary">A human-owned payment identity for personal AI agents, with explicit budgets, approved recipients, gas sponsorship, visible attribution, and immediate owner control.</p><div class="footer-column"><h3>PRODUCT</h3><a href="index.html">Overview</a><a href="proof.html">Live proof</a><a href="onboarding.html">Create identity</a><a href="app.html">Control room</a></div><div class="footer-column"><h3>DEVELOPERS</h3><a href="docs.html">Documentation</a><a href="agent.html">Agent connection</a><a href="/llms.txt">llms.txt</a><a href="https://github.com/Nifemi0/manda" target="_blank" rel="noreferrer">GitHub ↗</a></div><div class="footer-column"><h3>NETWORKS</h3><a class="footer-network" href="#network-proof"><i></i>Arbitrum Sepolia</a><a class="footer-network" href="#network-proof"><i></i>Robinhood Testnet</a><a href="https://github.com/Nifemi0/manda/blob/main/docs/TESTING-STATUS.md" target="_blank" rel="noreferrer">Testing evidence ↗</a></div></div><div class="footer-bottom"><span>© 2026 MANDA · OPEN HACKATHON PROTOTYPE</span><span class="footer-status"><i></i> TWO TESTNET PAYMENT PATHS VERIFIED</span></div></footer>
+  <footer class="site-footer"><div class="footer-lead"><div><a class="footer-brand" href="index.html"><span><i></i></span>MANDA</a><h2>Evidence before promises.</h2></div><a class="footer-cta" href="app.html">Open control room <span><svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-external"></use></svg></span></a></div><div class="footer-grid"><p class="footer-summary">A human-owned payment identity for personal AI agents, with explicit budgets, approved recipients, gas sponsorship, visible attribution, and immediate owner control.</p><div class="footer-column"><h3>PRODUCT</h3><a href="index.html">Overview</a><a href="proof.html">Live proof</a><a href="onboarding.html">Create identity</a><a href="app.html">Control room</a></div><div class="footer-column"><h3>DEVELOPERS</h3><a href="docs.html">Documentation</a><a href="agent.html">Agent connection</a><a href="/llms.txt">llms.txt</a><a href="https://github.com/Nifemi0/manda" target="_blank" rel="noreferrer">GitHub <svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-external"></use></svg></a></div><div class="footer-column"><h3>NETWORKS</h3><a class="footer-network" href="#network-proof"><i></i>Arbitrum Sepolia</a><a class="footer-network" href="#network-proof"><i></i>Robinhood Testnet</a><a href="https://github.com/Nifemi0/manda/blob/main/docs/TESTING-STATUS.md" target="_blank" rel="noreferrer">Testing evidence <svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-external"></use></svg></a></div></div><div class="footer-bottom"><span>© 2026 MANDA · OPEN HACKATHON PROTOTYPE</span><span class="footer-status"><i></i> TWO TESTNET PAYMENT PATHS VERIFIED</span></div></footer>
   <script type="module" src="proof.js"></script>
 </body>
 </html>

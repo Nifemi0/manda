@@ -42,6 +42,7 @@ const budgetProfiles = {
   standard: { perPayment: '0.000004', daily: '0.000005', threshold: '0.000001', reserve: '0.001', copy: 'Standard allows small routine payments while keeping a reserve.' },
   funded: { perPayment: '0.001', daily: '0.01', threshold: '0.0001', reserve: '0.005', copy: 'Funded unlocks larger automation while preserving a visible reserve.' }
 };
+const iconMarkup = name => `<svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-${name}"></use></svg>`;
 
 function updatePolicyPreview() {
   if (!policyPreview) return;
@@ -70,7 +71,7 @@ function showStep(step) {
   panels.forEach(panel => panel.classList.toggle('active', Number(panel.dataset.panel) === activeStep));
   stepCounter.textContent = `${activeStep} OF 4`;
   backButton.disabled = activeStep === 1;
-  nextButton.textContent = activeStep === 4 ? 'Return to first step ↺' : 'Preview next step →';
+  nextButton.innerHTML = activeStep === 4 ? `Return to first step ${iconMarkup('refresh')}` : `Preview next step ${iconMarkup('arrow-right')}`;
 }
 
 stepButtons.forEach(button => button.addEventListener('click', () => showStep(Number(button.dataset.step))));
@@ -87,7 +88,7 @@ function renderWallet({ address, network, supported }) {
     walletHeading.textContent = 'Not connected';
     walletDetail.textContent = 'No address or account data has been loaded.';
     walletNote.textContent = 'Connect an EVM wallet. No signature or transaction is requested.';
-    connectButton.innerHTML = 'Connect wallet <span>↗</span>';
+    connectButton.innerHTML = `Connect wallet ${iconMarkup('external')}`;
     networkActions.hidden = true;
     return;
   }
@@ -97,7 +98,7 @@ function renderWallet({ address, network, supported }) {
   connectedOwner = address;
   walletDetail.textContent = network ? `Connected on ${network.name}.` : 'Connected on an unsupported network.';
   walletNote.textContent = supported ? 'Owner verified. Choose a target network or continue.' : 'Switch to one of the two supported test networks.';
-  connectButton.innerHTML = 'Wallet connected <span>✓</span>';
+  connectButton.innerHTML = `Wallet connected ${iconMarkup('check')}`;
   networkActions.hidden = false;
   document.querySelectorAll('[data-chain]').forEach(button => button.classList.toggle('current', button.dataset.chain === network?.chainId));
   document.getElementById('reviewOwner').textContent = MandaWallet.shortAddress(address);
@@ -129,7 +130,7 @@ accountAction.addEventListener('click', async () => {
       accountActionNote.textContent = preparedAccount.deployed
         ? 'This Modular Account V2 is already deployed.'
         : preparedAccount.sponsored ? 'Address prepared. Deployment will request one signature.' : 'Address prepared. Add a gas policy before deployment.';
-      accountAction.textContent = preparedAccount.deployed ? 'Smart identity deployed ✓' : 'Deploy smart identity';
+      accountAction.textContent = preparedAccount.deployed ? 'Smart identity deployed' : 'Deploy smart identity';
       accountAction.disabled = preparedAccount.deployed || !preparedAccount.sponsored;
       return;
     }
@@ -144,7 +145,7 @@ accountAction.addEventListener('click', async () => {
     else saveSmartAccount({ owner: connectedOwner, address: result.address, chainId: smartAccountConfig.chain.id, deployed: true, transactionHash: result.transactionHash, userOperationHash: result.userOperationHash });
     document.getElementById('reviewAccount').textContent = MandaWallet.shortAddress(result.address);
     accountActionNote.textContent = `Deployed in transaction ${MandaWallet.shortAddress(result.transactionHash)}.`;
-    accountAction.textContent = 'Smart identity deployed ✓';
+    accountAction.textContent = 'Smart identity deployed';
   } catch (error) {
     console.error('Smart account action failed', error);
     showWalletError(error);
@@ -245,7 +246,7 @@ mandateForm.addEventListener('submit', async event => {
     await registerPolicy(savedPolicy);
     savePolicy(savedPolicy);
     policyStatus.textContent = `Active onchain · ${MandaWallet.shortAddress(result.transactionHash)}`;
-    policyAction.textContent = 'Mandate installed ✓';
+    policyAction.textContent = 'Mandate installed';
     document.getElementById('reviewPolicy').textContent = `${agentLabel.value.trim()} · active until ${new Date(policyExpiry.value).toLocaleString()}`;
   } catch (error) {
     console.error('Policy installation failed', error);

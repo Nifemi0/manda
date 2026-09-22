@@ -25,6 +25,7 @@ let status = null;
 let activeSnippet = 'javascript';
 const isLocal = ['127.0.0.1', 'localhost'].includes(window.location.hostname);
 const serviceUrl = isLocal ? 'http://127.0.0.1:4174' : `${window.location.origin}/api/agent`;
+const iconMarkup = name => `<svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-${name}"></use></svg>`;
 document.getElementById('serviceUrl').textContent = serviceUrl;
 
 const short = value => value ? `${value.slice(0, 6)}…${value.slice(-4)}` : '—';
@@ -211,7 +212,7 @@ function renderWallet(wallet) {
     ownerStatus.textContent = 'Wallet not connected';
     setBadge(ownerBadge, 'LOCKED');
     verifyAccess.disabled = true;
-    connectOwner.textContent = 'Connect owner wallet ↗';
+    connectOwner.innerHTML = `Connect owner wallet ${iconMarkup('external')}`;
     return;
   }
   ownerStatus.textContent = `${short(connectedOwner)} · ${wallet.network?.name || 'Unsupported network'}`;
@@ -219,7 +220,7 @@ function renderWallet(wallet) {
   setBadge(ownerBadge, session ? 'VERIFIED' : 'CONNECTED', session ? 'ready' : 'warn');
   verifyAccess.disabled = !status?.ready;
   verifyAccess.textContent = session ? 'Refresh private policy' : 'Verify owner access';
-  connectOwner.textContent = 'Owner connected ✓';
+  connectOwner.innerHTML = `Owner connected ${iconMarkup('check')}`;
 }
 
 async function verifyOwnerAccess() {
@@ -266,12 +267,12 @@ document.querySelectorAll('[data-snippet]').forEach(button => button.addEventLis
 }));
 document.getElementById('copySnippet').addEventListener('click', async event => {
   await navigator.clipboard.writeText(codeOutput.textContent);
-  event.currentTarget.textContent = 'Copied ✓';
+  event.currentTarget.innerHTML = `Copied ${iconMarkup('check')}`;
   setTimeout(() => { event.currentTarget.textContent = 'Copy code'; }, 1600);
 });
 document.querySelector('[data-copy-target="agentAddress"]').addEventListener('click', async event => {
   await navigator.clipboard.writeText(agentAddress.textContent);
-  event.currentTarget.textContent = 'Copied';
+  event.currentTarget.innerHTML = `Copied ${iconMarkup('check')}`;
   setTimeout(() => { event.currentTarget.textContent = 'Copy'; }, 1400);
 });
 

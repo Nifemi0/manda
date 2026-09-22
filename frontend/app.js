@@ -21,6 +21,7 @@ const arbitrumClient = createPublicClient({ chain: arbitrumSepolia, transport: h
 const robinhoodClient = createPublicClient({ chain: robinhoodTestnet, transport: http('https://rpc.testnet.chain.robinhood.com') });
 let connectedOwner = null;
 const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
+const iconMarkup = name => `<svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-${name}"></use></svg>`;
 
 async function renderBalances(state) {
   const requests = [
@@ -39,7 +40,7 @@ function renderActivity(items = []) {
   body.innerHTML = `<div class="activity-columns"><span>ACTOR</span><span>INTENT</span><span>POLICY RESULT</span><span>NETWORK</span><span>EVIDENCE</span></div>${items.map(item => {
     const explorer = Number(item.chainId) === 46630 ? 'https://explorer.testnet.chain.robinhood.com/tx/' : 'https://sepolia.arbiscan.io/tx/';
     const validHash = /^0x[0-9a-f]{64}$/i.test(item.transactionHash || '');
-    const evidence = validHash ? `<a target="_blank" rel="noreferrer" href="${explorer}${item.transactionHash}">${MandaWallet.shortAddress(item.transactionHash)} ↗</a>` : '<span>Policy decision</span>';
+    const evidence = validHash ? `<a target="_blank" rel="noreferrer" href="${explorer}${item.transactionHash}">${MandaWallet.shortAddress(item.transactionHash)} ${iconMarkup('external')}</a>` : '<span>Policy decision</span>';
     return `<div class="activity-row"><b>${escapeHtml(item.actor)}</b><span>${escapeHtml(item.intent)}</span><strong class="${escapeHtml(item.status)}">${escapeHtml(item.reason || item.status)}</strong><span>${escapeHtml(item.network)}</span>${evidence}</div>`;
   }).join('')}`;
 }
@@ -69,7 +70,7 @@ function renderProductState(state = readProductState()) {
   if (account.transactionHash) {
     const evidence = document.getElementById('smartAccountEvidence');
     evidence.href = `${policyIsRobinhood ? 'https://explorer.testnet.chain.robinhood.com/tx/' : 'https://sepolia.arbiscan.io/tx/'}${account.transactionHash}`;
-    evidence.target = '_blank'; evidence.rel = 'noreferrer'; evidence.textContent = 'Open deployment evidence ↗';
+    evidence.target = '_blank'; evidence.rel = 'noreferrer'; evidence.innerHTML = `Open deployment evidence ${iconMarkup('external')}`;
   }
   const policyNetwork = Number(policy?.chainId) === 46630 ? 'Robinhood Chain Testnet' : 'Arbitrum Sepolia';
   if (policy) {
@@ -196,7 +197,7 @@ function renderDashboardWallet({ address, network }) {
   accountHeadline.innerHTML = 'Human connected.<br>Smart account comes next.';
   accountDescription.textContent = 'The root owner is verified from the connected wallet. No smart account, mandate, balance, or activity is claimed yet.';
   authorityStatus.innerHTML = 'ROOT AUTHORITY<br>CONNECTED';
-  dashboardConnect.textContent = 'Wallet connected ✓'; dashboardConnect.disabled = true;
+  dashboardConnect.innerHTML = `Wallet connected ${iconMarkup('check')}`; dashboardConnect.disabled = true;
   renderProductState();
   if (readAgentSession(address)) {
     const preferredChainId = network?.chainId ? Number(network.chainId) : 421614;
@@ -232,7 +233,7 @@ revokeAgent.addEventListener('click', async () => {
     const sync = await agentFetch('/api/agent/policy', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ policy: revokedPolicy }) }, ownerAddress);
     if (!sync.ok) throw new Error((await sync.json()).error || 'The revoked state could not be synchronized.');
     appendActivity({ actor: 'Human owner', intent: 'Revoke agent mandate', status: 'confirmed', reason: 'REVOKED', network: isRobinhood ? 'Robinhood Chain Testnet' : 'Arbitrum Sepolia', chainId: state.policy.chainId, transactionHash: result.transactionHash });
-    revokeAgent.textContent = 'Agent revoked ✓';
+    revokeAgent.innerHTML = `Agent revoked ${iconMarkup('check')}`;
   } catch (error) {
     console.error('Revocation failed', error); revokeAgent.textContent = 'Revocation failed — retry'; revokeAgent.disabled = false;
   }
