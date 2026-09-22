@@ -6,6 +6,8 @@ This project is a programmable payment identity shared safely between a person a
 
 [Open the live product](https://manda-dun.vercel.app/) · [Read the web documentation](https://manda-dun.vercel.app/docs.html) · [Connect an agent](https://manda-dun.vercel.app/agent.html)
 
+[Inspect live proof](https://manda-dun.vercel.app/proof.html) — public service state, active mandates, confirmed receipts, and implementation boundaries without a wallet connection.
+
 ![Manda landing page explaining human-controlled agent payments](evidence/original-depth-content-full.png)
 
 ## Why it exists
@@ -52,6 +54,7 @@ The agent completes a small approved payment, a larger unauthorized payment is b
 ## Product routes
 
 - `/` — product story, mechanism, supported networks, and entry point.
+- `/proof.html` — public production status, active mandates, confirmed chain receipts, and judge review path.
 - `/docs.html` — technical model, policy reference, agent API, evidence, and setup.
 - `/agent.html` — live service detection, owner-authenticated policy inspection, and copy-ready agent adapters.
 - `/onboarding.html` — owner connection, smart-account preparation, mandate configuration, and review.

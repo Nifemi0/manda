@@ -34,6 +34,7 @@ export default defineConfig(({ mode }) => {
     rollupOptions: {
       input: {
         landing: resolve(import.meta.dirname, 'frontend/index.html'),
+        proof: resolve(import.meta.dirname, 'frontend/proof.html'),
         docs: resolve(import.meta.dirname, 'frontend/docs.html'),
         agent: resolve(import.meta.dirname, 'frontend/agent.html'),
         onboarding: resolve(import.meta.dirname, 'frontend/onboarding.html'),
