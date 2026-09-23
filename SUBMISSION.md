@@ -1,8 +1,18 @@
-# Manda — HackQuest submission draft
+# Manda — HackQuest entry draft
+
+**Status: prepared locally; not submitted.** This draft targets the Arbitrum Open House Singapore Online Buildathon on HackQuest. Check the live event page and entry form for the final fields, track rules, and timezone before submitting.
+
+## Project title
+
+Manda: Human-owned payments for personal AI agents
 
 ## One-line description
 
 Manda gives personal AI agents narrow, revocable payment authority from a human-owned smart account without exposing the owner's wallet key.
+
+## Recommended category
+
+If the entry form asks for a category, review **Promising Products Track** first: Manda is a working testnet product with a focused user problem and verified execution, but it does not claim user traction or mainnet readiness. Do not claim automatic entry into multiple prize categories; follow the live form. The project is deployed on Arbitrum Sepolia, which meets the published Arbitrum-chain deployment requirement, and also has a separate Robinhood Chain Testnet path. Manda does not integrate Paxos USDG; the event lists that as extra consideration, not as a qualification requirement.
 
 ## Project description
 
@@ -15,6 +25,10 @@ Manda is deployed across Arbitrum Sepolia and Robinhood Chain Testnet using the 
 ## Why it matters
 
 Existing wallets are designed around a human approving each action or giving software broad key access. Manda provides a safer middle layer for autonomous commerce: the human remains the root owner while the agent receives enough authority to complete routine purchases and no more.
+
+## How the AI agent uses Manda
+
+Manda does not ship or claim its own AI model. It exposes a narrow payment tool that an existing AI runtime can call with a recipient, amount, request identifier, and supported network. The agent uses a separate delegated key; deterministic service checks and the account's installed validation modules decide whether the request is permitted. Larger requests require owner approval. The owner’s signing key and the delegated private key stay outside the browser.
 
 ## Core features
 
@@ -31,6 +45,12 @@ Existing wallets are designed around a human approving each action or giving sof
 
 JavaScript, Vite, Node.js, viem, Alchemy Modular Account V2, ERC-4337, Candide bundler/paymaster on Arbitrum Sepolia, Alchemy Bundler and Gas Manager on Robinhood Chain Testnet, Vercel, Nginx, and systemd.
 
+## Architecture and contract note
+
+The Vercel site serves the frontend and forwards restricted agent API routes to the authenticated service on the VPS. That service loads the delegated signer and policy data server-side. Owner setup submits Modular Account V2 operations through ERC-4337; Candide sponsors the Arbitrum path and Alchemy sponsors the Robinhood testnet path. Each network executes independently; bridging is not part of the verified product.
+
+The repository composes the deployed Modular Account V2 and installed validation modules through the account SDK; it does not contain a bespoke Solidity contract. Describe the onchain enforcement as installed account modules and show their configuration and explorer evidence. Do not imply an independent contract audit.
+
 ## Links
 
 - Live product: https://manda-dun.vercel.app/
@@ -41,6 +61,18 @@ JavaScript, Vite, Node.js, viem, Alchemy Modular Account V2, ERC-4337, Candide b
 - Arbitrum production payment: https://sepolia.arbiscan.io/tx/0x952916eb8280a0a30972edfa181f337fc0d3bbbe4d6fb390289935dc27558d2b
 - Robinhood payment: https://explorer.testnet.chain.robinhood.com/tx/0x063219ecd3b3c8913ca40f3eba470dd16fa66d552c9ea95e4a62f645035142f3
 - Demo video: **add public video URL before submission**
+
+## Reproduction checks
+
+From a clean checkout, run:
+
+```bash
+npm ci
+npm test
+npm run build
+```
+
+The full local wallet and payment flow also needs the server-side values in `.env.local` and the local agent service. Never include `.env.local`, agent keys, API tokens, or policy credentials in the public repository or video. Use the deployed demo for judging rather than asking reviewers to configure private service credentials.
 
 ## Suggested demo sequence
 
@@ -60,9 +92,25 @@ Target length: 90–120 seconds.
 - Live owner-signed revocation is implemented but has not yet been captured as onchain evidence.
 - Automatic routing, bridging, swaps, and rebalancing are outside the verified build.
 - This prototype has not received a third-party security audit.
+- Manda has no published user or adoption metrics; do not imply traction.
+- Manda does not currently support Paxos USDG.
+- The repository does not include custom Solidity source; the onchain account and validation modules come from the Modular Account SDK.
 
-## Fields to complete in HackQuest
+## Screenshots and demo video
 
-- Team member name, role, and contact details.
-- Public demo video URL.
-- Project image or cover asset.
+Do not reuse the existing full-page images under `evidence/` as final entry media: they capture an earlier design and test state. Capture fresh images from the current production site after the final UI review:
+
+- Landing page showing the human-owned identity and agent boundary.
+- Public proof page with both networks and confirmed explorer links.
+- Connected control room showing the active policy and attributed payment.
+- Agent connection page showing the narrow request interface.
+
+Record a 90–120 second walkthrough using the sequence below. Add the public video URL and the project cover image after they are created.
+
+## Final portal checklist
+
+- Confirm the live form's exact title, category, description, team, and link fields; fill team roles and contact details without guessing.
+- Add a current cover image and fresh screenshots; do not upload the older `evidence/` screenshots as if they showed the current build.
+- Record and publish the walkthrough, then add its public video URL.
+- Re-check the deadline timezone and any extra terms in HackQuest before the final submit action.
+- Verify the public repository and live demo open in a signed-out browser.

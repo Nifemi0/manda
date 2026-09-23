@@ -1,6 +1,6 @@
 # Arbitrum Open House Singapore buildathon
 
-Verified against the live HackQuest listing on 2026-09-20.
+Verified against the live HackQuest listing on 2026-09-23.
 
 ## Schedule
 
@@ -14,6 +14,8 @@ Times above are shown as published by HackQuest; confirm the platform timezone b
 
 - A qualifying project must deploy on an Arbitrum chain. The event explicitly lists Arbitrum Sepolia, Arbitrum One, and Robinhood Chain as examples.
 - Judging considers smart-contract quality, product-market fit, innovation and creativity, and real problem solving.
+- The listing gives extra consideration to Paxos USDG integrations; Manda does not currently integrate USDG, and it is not listed as a qualification requirement.
+- The repository composes the deployed Modular Account V2 and validation modules through the SDK rather than shipping bespoke Solidity source. Be precise about this when addressing the smart-contract-quality criterion.
 - At least one of the three Promising Products prizes is reserved for a Robinhood Chain project, and at least one is reserved for an Arbitrum project.
 
 ## Prize fit

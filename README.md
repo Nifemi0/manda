@@ -8,7 +8,7 @@ This project is a programmable payment identity shared safely between a person a
 
 [Inspect live proof](https://manda-dun.vercel.app/proof.html) — public service state, active mandates, confirmed receipts, and implementation boundaries without a wallet connection.
 
-![Manda landing page explaining human-controlled agent payments](evidence/original-depth-content-full.png)
+The live site is the current product preview: [open Manda](https://manda-dun.vercel.app/). Screenshots in `evidence/` include earlier UI iterations and are not final submission media.
 
 ## Why it exists
 
