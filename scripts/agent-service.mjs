@@ -3,14 +3,15 @@ import { randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createPublicClient, http, isAddress, verifyMessage } from 'viem';
+import { createPublicClient, encodeFunctionData, erc20Abi, http, isAddress, verifyMessage } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { arbitrumSepolia } from 'viem/chains';
 import { robinhoodTestnet } from '@alchemy/common/chains';
 import { createBundlerClient, createPaymasterClient } from 'viem/account-abstraction';
-import { DefaultModuleAddress, NativeTokenLimitModule, toModularAccountV2 } from '@alchemy/smart-accounts';
-import { evaluatePayment } from '../frontend/policy-engine.js';
+import { AllowlistModule, DefaultModuleAddress, NativeTokenLimitModule, toModularAccountV2 } from '@alchemy/smart-accounts';
+import { evaluatePayment, policyRecipients } from '../frontend/policy-engine.js';
 import { paymentApprovalMessage, policyIdentifier, policyRegistrationMessage } from '../frontend/policy-auth.js';
+import { ERC20_HOOK_ENTITY_OFFSET, getUSDGAddress, normalizeAsset } from '../frontend/assets.js';
 
 const root = new URL('../', import.meta.url);
 const projectRoot = fileURLToPath(root);
@@ -56,7 +57,13 @@ const writeJson = (path, value) => {
     renameSync(ledgerTempPath, ledgerPath);
   } else writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
 };
-const policyFor = chainId => networks[Number(chainId)]?.policyPath;
+const policyFor = (chainId, asset = 'ETH') => {
+  const networkId = Number(chainId);
+  const network = networks[networkId];
+  if (!network) return null;
+  if (normalizeAsset(asset) === 'USDG') return runtimePath(networkId === 421614 ? '.usdg-policy-state.local.json' : '.robinhood-usdg-policy-state.local.json');
+  return network.policyPath;
+};
 const respond = (res, status, body) => {
   res.writeHead(status, {
     'content-type': 'application/json', 'cache-control': 'no-store',
@@ -106,18 +113,30 @@ const requestAuthorized = (req, policy) => bearerAuthorized(req)
 
 function normalizedPolicy(policy) {
   if (!policy || typeof policy !== 'object') throw new Error('Policy is required.');
+  const policyStatus = policy.status === 'active' && Number(policy.expiresAt) <= Date.now() ? 'expired' : policy.status;
   policy = {
     ...policy,
+    status: policyStatus,
+    asset: normalizeAsset(policy.asset),
     approvalThresholdWei: policy.approvalThresholdWei || (BigInt(policy.perPaymentWei) / 4n).toString(),
     balanceFloorWei: policy.balanceFloorWei || '1000000000000000'
   };
-  for (const field of ['ownerAddress', 'agentAddress', 'smartAccount', 'recipient']) {
+  for (const field of ['ownerAddress', 'agentAddress', 'smartAccount']) {
     if (!isAddress(policy[field] || '')) throw new Error(`${field} must be a valid address.`);
   }
+  const recipients = policyRecipients(policy);
+  if (!recipients.length || recipients.length > 32 || recipients.some(recipient => !isAddress(recipient))) throw new Error('recipients must contain 1 to 32 valid EVM addresses.');
   const trustedOwner = existsSync(ownerPath) ? readText(ownerPath) : '';
   if (trustedOwner && policy.ownerAddress.toLowerCase() !== trustedOwner.toLowerCase()) throw new Error('This service is pinned to another owner.');
   if (policy.agentAddress.toLowerCase() !== signer.address.toLowerCase()) throw new Error('Agent identity mismatch.');
   if (!networks[Number(policy.chainId)]) throw new Error(`Unsupported chain ${policy.chainId}.`);
+  if (!['ETH', 'USDG'].includes(policy.asset)) throw new Error('Unsupported payment asset.');
+  if (policy.asset === 'USDG') {
+    const expectedToken = getUSDGAddress(policy.chainId);
+    if (!expectedToken || !isAddress(policy.tokenAddress || '') || policy.tokenAddress.toLowerCase() !== expectedToken.toLowerCase()) {
+      throw new Error('USDG is only supported at the verified testnet token address for this chain.');
+    }
+  } else if (policy.tokenAddress) throw new Error('Native ETH policies cannot set a token address.');
   if (!Number.isInteger(Number(policy.entityId)) || Number(policy.entityId) < 0) throw new Error('Invalid policy entity.');
   for (const field of ['perPaymentWei', 'dailyLimitWei', 'approvalThresholdWei', 'balanceFloorWei']) {
     try { if (BigInt(policy[field]) < 0n) throw new Error(); } catch { throw new Error(`${field} must be a non-negative integer.`); }
@@ -125,12 +144,13 @@ function normalizedPolicy(policy) {
   if (BigInt(policy.perPaymentWei) <= 0n || BigInt(policy.dailyLimitWei) <= 0n) throw new Error('Payment and daily limits must be positive.');
   if (BigInt(policy.perPaymentWei) > BigInt(policy.dailyLimitWei)) throw new Error('Per-payment limit cannot exceed the daily budget.');
   if (BigInt(policy.approvalThresholdWei) > BigInt(policy.perPaymentWei)) throw new Error('Approval threshold cannot exceed the payment cap.');
-  if (!['active', 'revoked'].includes(policy.status)) throw new Error('Policy status is invalid.');
-  if (policy.status === 'active' && Number(policy.expiresAt) <= Date.now()) throw new Error('Policy has already expired.');
+  if (!['active', 'revoked', 'expired'].includes(policy.status)) throw new Error('Policy status is invalid.');
   const result = {
     ...policy, chainId: Number(policy.chainId), entityId: Number(policy.entityId),
+    recipients,
     onchainAllowanceWei: String(policy.onchainAllowanceWei || policy.dailyLimitWei)
   };
+  result.recipient = recipients[0];
   result.policyId = policyIdentifier(result);
   return result;
 }
@@ -144,13 +164,36 @@ async function verifyPolicyEvidence(policy) {
   ]);
   if (!code || code === '0x') throw new Error('Smart account is not deployed on the selected chain.');
   if (receipt.status !== 'success') throw new Error('Policy evidence transaction did not succeed.');
+  if (policy.asset === 'USDG') {
+    const [symbol, decimals] = await Promise.all([
+      client.readContract({ address: policy.tokenAddress, abi: erc20Abi, functionName: 'symbol' }),
+      client.readContract({ address: policy.tokenAddress, abi: erc20Abi, functionName: 'decimals' })
+    ]);
+    if (symbol !== 'USDG' || decimals !== 6) throw new Error('The configured USDG contract metadata does not match Paxos testnet USDG.');
+  }
   if (policy.status === 'active') {
-    const remaining = await client.readContract({
+    if (policy.asset === 'USDG') {
+      const nativeLimit = await client.readContract({
+        address: DefaultModuleAddress.NATIVE_TOKEN_LIMIT, abi: NativeTokenLimitModule.abi,
+        functionName: 'limits', args: [BigInt(policy.entityId), policy.smartAccount]
+      });
+      if (nativeLimit !== 0n) throw new Error('A USDG mandate must not authorize native-token transfers.');
+    }
+    const remaining = await readOnchainAllowance(policy, client);
+    if (remaining <= 0n || remaining > BigInt(policy.onchainAllowanceWei)) throw new Error('Onchain allowance does not match the signed policy.');
+  }
+}
+
+async function readOnchainAllowance(policy, client = createPublicClient({ chain: networks[policy.chainId].chain, transport: http(networks[policy.chainId].rpc) })) {
+  return policy.asset === 'USDG'
+    ? client.readContract({
+      address: DefaultModuleAddress.ALLOWLIST, abi: AllowlistModule.abi,
+      functionName: 'erc20SpendLimits', args: [BigInt(policy.entityId) + BigInt(ERC20_HOOK_ENTITY_OFFSET), policy.tokenAddress, policy.smartAccount]
+    })
+    : client.readContract({
       address: DefaultModuleAddress.NATIVE_TOKEN_LIMIT, abi: NativeTokenLimitModule.abi,
       functionName: 'limits', args: [BigInt(policy.entityId), policy.smartAccount]
     });
-    if (remaining <= 0n || remaining > BigInt(policy.onchainAllowanceWei)) throw new Error('Onchain allowance does not match the signed policy.');
-  }
 }
 
 async function verifyPaymentApproval(policy, request) {
@@ -177,7 +220,9 @@ async function executePayment(policy, request) {
   const options = { account: agentAccount, chain: network.chain, transport, userOperation: { estimateFeesPerGas: () => publicClient.estimateFeesPerGas() } };
   if (network.mode === 'candide') options.paymaster = createPaymasterClient({ chain: network.chain, transport });
   const bundler = createBundlerClient(options);
-  const call = { to: request.recipient, value: BigInt(request.amountWei), data: '0x' };
+  const call = policy.asset === 'USDG'
+    ? { to: policy.tokenAddress, value: 0n, data: encodeFunctionData({ abi: erc20Abi, functionName: 'transfer', args: [request.recipient, BigInt(request.amountWei)] }) }
+    : { to: request.recipient, value: BigInt(request.amountWei), data: '0x' };
   let userOperationHash;
   if (network.mode === 'alchemy') {
     const parameters = ['factory', 'fees', 'gas', 'nonce', 'signature', 'authorization'];
@@ -202,9 +247,17 @@ const replaceLedgerEvent = event => {
   if (index >= 0) ledger[index] = event; else ledger.unshift(event);
   writeJson(ledgerPath, ledger);
 };
+const denialMessage = reason => ({
+  REVOKED: 'The owner revoked this mandate.', EXPIRED: 'The mandate has expired.', WRONG_CHAIN: 'This mandate is for another chain.',
+  ASSET_NOT_ALLOWED: 'This asset is not enabled by the mandate.', RECIPIENT_NOT_ALLOWED: 'This destination is outside the approved recipient set.',
+  PAYMENT_LIMIT_EXCEEDED: 'The amount exceeds the per-payment cap.', DAILY_LIMIT_EXCEEDED: 'The remaining daily budget is too small.',
+  TOTAL_ALLOWANCE_EXCEEDED: 'The cumulative onchain allowance is exhausted.', HUMAN_APPROVAL_REQUIRED: 'Owner approval is required for this amount.',
+  REPLAYED_REQUEST: 'This requestId was already used.', INVALID_REQUEST: 'The payment request is malformed.'
+}[reason] || 'The payment was blocked by policy.');
 
 async function handlePayment(req, res, request) {
-  const path = policyFor(request.chainId);
+  request.asset = normalizeAsset(request.asset || 'ETH');
+  const path = policyFor(request.chainId, request.asset);
   const loaded = path ? readJson(path, null) : null;
   if (!loaded) return respond(res, 409, { error: 'No policy is installed for this network.' });
   const policy = normalizedPolicy(loaded);
@@ -215,22 +268,31 @@ async function handlePayment(req, res, request) {
   const network = networks[policy.chainId];
   const base = {
     requestId: request.requestId, policyId: policy.policyId, smartAccount: policy.smartAccount, ownerAddress: policy.ownerAddress,
-    actor: 'AI agent', intent: `Pay ${request.amountWei} wei`, amountWei: request.amountWei,
+    actor: 'AI agent', asset: request.asset, tokenAddress: policy.tokenAddress || null,
+    intent: `Pay ${request.amountWei} ${request.asset === 'USDG' ? 'USDG base units' : 'wei'}`, amountWei: request.amountWei,
     recipient: request.recipient, network: network.name, chainId: policy.chainId, timestamp: Date.now()
   };
   if (!decision.allowed) {
-    const event = { ...base, status: 'blocked', reason: decision.reason };
+    const event = { ...base, status: 'blocked', code: decision.reason, reason: decision.reason, message: denialMessage(decision.reason), retryable: decision.reason === 'HUMAN_APPROVAL_REQUIRED' };
     replaceLedgerEvent(event);
     return respond(res, 403, event);
   }
   replaceLedgerEvent({ ...base, status: 'pending', reason: decision.reason });
   try {
     const publicClient = createPublicClient({ chain: network.chain, transport: http(network.rpc) });
-    const balance = await publicClient.getBalance({ address: policy.smartAccount });
-    const floor = BigInt(policy.balanceFloorWei || 0);
     const amount = BigInt(request.amountWei);
+    const remainingAllowance = await readOnchainAllowance(policy, publicClient);
+    if (amount > remainingAllowance) {
+      const event = { ...base, status: 'blocked', reason: 'TOTAL_ALLOWANCE_EXCEEDED', remainingAllowanceWei: remainingAllowance.toString() };
+      replaceLedgerEvent(event);
+      return respond(res, 403, event);
+    }
+    const balance = policy.asset === 'USDG'
+      ? await publicClient.readContract({ address: policy.tokenAddress, abi: erc20Abi, functionName: 'balanceOf', args: [policy.smartAccount] })
+      : await publicClient.getBalance({ address: policy.smartAccount });
+    const floor = policy.asset === 'USDG' ? 0n : BigInt(policy.balanceFloorWei || 0);
     if (balance < amount + floor) {
-      const event = { ...base, status: 'blocked', reason: 'BALANCE_FLOOR_BREACH', availableWei: balance.toString(), balanceFloorWei: floor.toString() };
+      const event = { ...base, status: 'blocked', reason: policy.asset === 'USDG' ? 'TOKEN_BALANCE_TOO_LOW' : 'BALANCE_FLOOR_BREACH', availableWei: balance.toString(), balanceFloorWei: floor.toString() };
       replaceLedgerEvent(event);
       return respond(res, 403, event);
     }
@@ -250,10 +312,14 @@ createServer(async (req, res) => {
     const url = new URL(req.url, 'http://127.0.0.1:4174');
     if (req.method === 'GET' && url.pathname === '/status') {
       const policies = Object.fromEntries(Object.entries(networks).map(([id, network]) => {
-        const policy = readJson(network.policyPath, null);
-        return [id, policy ? { chainId: Number(id), status: policy.status, smartAccount: policy.smartAccount, expiresAt: policy.expiresAt } : null];
+        const byAsset = Object.fromEntries(['ETH', 'USDG'].map(asset => {
+          const policy = readJson(policyFor(id, asset), null);
+          const status = policy?.status === 'active' && Number(policy.expiresAt) <= Date.now() ? 'expired' : policy?.status;
+          return [asset, policy ? { chainId: Number(id), asset, status, smartAccount: policy.smartAccount, expiresAt: policy.expiresAt } : null];
+        }));
+        return [id, byAsset];
       }));
-      return respond(res, 200, { ready: true, agentAddress: identity.address, service, authRequired: true, policyInstalled: Object.values(policies).some(Boolean), policies });
+      return respond(res, 200, { ready: true, agentAddress: identity.address, service, authRequired: true, policyInstalled: Object.values(policies).some(byAsset => Object.values(byAsset).some(Boolean)), policies });
     }
     if (req.method === 'GET' && url.pathname === '/auth/challenge') {
       const ownerAddress = url.searchParams.get('owner');
@@ -281,9 +347,34 @@ createServer(async (req, res) => {
       const activity = readJson(ledgerPath, []).filter(item => !session || !item.ownerAddress || item.ownerAddress.toLowerCase() === session.ownerAddress.toLowerCase());
       return respond(res, 200, { activity });
     }
+    if (req.method === 'GET' && url.pathname === '/capabilities') {
+      const chainId = Number(url.searchParams.get('chainId'));
+      const asset = normalizeAsset(url.searchParams.get('asset') || 'ETH');
+      const path = policyFor(chainId, asset);
+      if (!path) return respond(res, 400, { error: 'A supported chainId and asset are required.', code: 'UNSUPPORTED_NETWORK' });
+      const loaded = readJson(path, null);
+      if (!loaded) return respond(res, 404, { error: 'No policy is installed for this network.', code: 'POLICY_NOT_FOUND' });
+      const policy = normalizedPolicy(loaded);
+      if (!requestAuthorized(req, policy)) return respond(res, 401, { error: 'A verified owner session or agent service token is required.', code: 'AUTH_REQUIRED' });
+      const ledger = readJson(ledgerPath, []);
+      const now = Date.now();
+      const dayStart = now - (now % 86_400_000);
+      const spend = ledger.filter(item => ['pending', 'confirmed'].includes(item.status) && item.policyId === policy.policyId && item.timestamp >= dayStart && item.timestamp <= now)
+        .reduce((sum, item) => sum + BigInt(item.amountWei || 0), 0n);
+      return respond(res, 200, {
+        service: 'Manda', chainId, asset, status: policy.status,
+        recipients: policyRecipients(policy),
+        limits: { perPayment: policy.perPaymentWei, daily: policy.dailyLimitWei, total: policy.onchainAllowanceWei, approvalThreshold: policy.approvalThresholdWei },
+        usage: { spentToday: spend.toString(), dailyRemaining: (BigInt(policy.dailyLimitWei) > spend ? BigInt(policy.dailyLimitWei) - spend : 0n).toString() },
+        expiresAt: policy.expiresAt,
+        actions: { quote: false, pay: policy.status === 'active', revoke: 'owner-only' },
+        endpoints: ['/capabilities', '/pay', '/activity']
+      });
+    }
     if (req.method === 'GET' && url.pathname === '/policy') {
       const chainId = Number(url.searchParams.get('chainId'));
-      const path = policyFor(chainId);
+      const asset = normalizeAsset(url.searchParams.get('asset') || 'ETH');
+      const path = policyFor(chainId, asset);
       if (!path) return respond(res, 400, { error: 'A supported chainId is required.' });
       const loaded = readJson(path, null);
       if (!loaded) return respond(res, 404, { error: 'No policy is installed for this network.' });
@@ -300,7 +391,7 @@ createServer(async (req, res) => {
       if (!sessionValid && !signatureValid) return respond(res, 401, { error: 'A policy-owner signature is required.' });
       await verifyPolicyEvidence(policy);
       if (!existsSync(ownerPath)) writeFileSync(ownerPath, `${policy.ownerAddress}\n`);
-      writeJson(policyFor(policy.chainId), policy);
+      writeJson(policyFor(policy.chainId, policy.asset), policy);
       const issuedSession = sessionValid ? session : createSession(policy.ownerAddress);
       return respond(res, 200, { saved: true, chainId: policy.chainId, policyId: policy.policyId, session: issuedSession });
     }

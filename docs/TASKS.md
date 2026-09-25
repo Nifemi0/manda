@@ -13,20 +13,22 @@
 
 ## Technical validation
 
-- [ ] Confirm faucet and supported test token for both networks.
+- [x] Confirm Paxos USDG test token deployments on Arbitrum Sepolia and Robinhood Chain Testnet.
+- [ ] Fund an owner smart account with USDG from the official faucet and verify one payment plus token/recipient/cap rejection cases on both networks.
 - [x] Confirm chain IDs, public RPC endpoints, and explorers for Arbitrum Sepolia and Robinhood Chain Testnet.
 - [x] Implement and verify the Robinhood Testnet Modular Account V2 sponsored deployment and payment path through Alchemy.
 - [x] Implement the Arbitrum Sepolia Modular Account V2 client, counterfactual address preparation, bundler, and sponsored first UserOperation path.
 - [x] Configure the Alchemy API key and Gas Manager policy; Alchemy capacity was exhausted, so execute the Arbitrum Sepolia deployment through the verified Candide public bundler/paymaster fallback.
 - [x] Test constrained delegated-key authorization through Modular Account V2 validation and hook modules.
-- [ ] Validate MPP and token compatibility before including it in product claims.
+- [x] Validate ERC-20 permission support and implement USDG-specific spend hooks and payment calls.
+- [ ] Validate USDG live execution and module revocation before including verified-payment claims.
 - [ ] Evaluate a bridge provider only after both standalone payment flows work.
 
 ## Contracts and account logic
 
 - [x] Deploy the human-owned Modular Account V2 on Arbitrum Sepolia and independently verify runtime bytecode at the account address.
 - [x] Implement delegated agent authorization with a separate key, authenticated service token, and owner-signed browser sessions.
-- [x] Enforce per-payment limit, daily runtime allowance, approved target, chain, expiry, replay protection, and a cumulative onchain ceiling.
+- [x] Enforce per-payment limit, UTC daily runtime budget, user-set cumulative onchain total cap, approved target, chain, expiry, and replay protection.
 - [x] Implement chain-aware immediate revocation; live owner-signed revocation evidence remains pending.
 - [x] Emit attributed policy-result records in the service ledger.
 - [x] Test permitted payment, excessive payment, expiry, unapproved target, replay, invalid input, and revoked state.

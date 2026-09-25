@@ -1,10 +1,11 @@
-import { createPublicClient, createWalletClient, custom, http, zeroAddress } from 'viem';
+import { createPublicClient, createWalletClient, custom, http, toFunctionSelector, zeroAddress } from 'viem';
 import { createBundlerClient } from 'viem/account-abstraction';
 import { robinhoodTestnet } from '@alchemy/common/chains';
 import {
   AllowlistModule, DefaultModuleAddress, NativeTokenLimitModule, PermissionBuilder, PermissionType,
   SingleSignerValidationModule, TimeRangeModule, installValidationActions, toModularAccountV2
 } from '@alchemy/smart-accounts';
+import { ERC20_HOOK_ENTITY_OFFSET, normalizeAsset } from './assets.js';
 
 const bundlerUrl = '/api/robinhood';
 let smartAccount;
@@ -52,7 +53,7 @@ export async function deployRobinhoodAccount() {
   return { address: smartAccount.address, userOperationHash, transactionHash: receipt.receipt.transactionHash };
 }
 
-export async function installRobinhoodPolicy({ agentAddress, recipient, dailyLimitWei, expiresAt, entityId = 1 }) {
+export async function installRobinhoodPolicy({ agentAddress, recipient, recipients, dailyLimitWei, onchainAllowanceWei = dailyLimitWei, expiresAt, entityId = 1, asset = 'ETH', tokenAddress }) {
   if (!smartAccount || !bundlerClient) throw new Error('Prepare the Robinhood smart account before installing a mandate.');
   const validUntil = Math.floor(new Date(expiresAt).getTime() / 1000);
   const timeHook = TimeRangeModule.buildHook({ entityId, validUntil, validAfter: 0 }, DefaultModuleAddress.TIME_RANGE);
@@ -63,10 +64,18 @@ export async function installRobinhoodPolicy({ agentAddress, recipient, dailyLim
     nonce: 0n,
     hooks: [timeHook]
   });
-  builder.addPermissions({ permissions: [
-    { type: PermissionType.NATIVE_TOKEN_TRANSFER, data: { allowance: `0x${BigInt(dailyLimitWei).toString(16)}` } },
-    { type: PermissionType.CONTRACT_ACCESS, data: { address: recipient } }
-  ] });
+  const recipientSet = [...new Set((recipients || [recipient]).filter(Boolean).map(address => address.toLowerCase()))];
+  if (!recipientSet.length || recipientSet.length > 32) throw new Error('A mandate must have between 1 and 32 recipients.');
+  const permissions = normalizeAsset(asset) === 'USDG'
+    ? [
+      { type: PermissionType.NATIVE_TOKEN_TRANSFER, data: { allowance: '0x0' } },
+      { type: PermissionType.ERC20_TOKEN_TRANSFER, data: { address: tokenAddress, allowance: `0x${BigInt(onchainAllowanceWei).toString(16)}` } }
+    ]
+    : [
+      { type: PermissionType.NATIVE_TOKEN_TRANSFER, data: { allowance: `0x${BigInt(onchainAllowanceWei).toString(16)}` } },
+      ...recipientSet.map(address => ({ type: PermissionType.CONTRACT_ACCESS, data: { address } }))
+    ];
+  builder.addPermissions({ permissions });
   const callData = await builder.compileRaw();
   const request = await prepareSponsoredOperation({ callData });
   const signature = await smartAccount.signUserOperation(request);
@@ -75,19 +84,31 @@ export async function installRobinhoodPolicy({ agentAddress, recipient, dailyLim
   return { entityId, validUntil, userOperationHash, transactionHash: receipt.receipt.transactionHash };
 }
 
-export async function revokeRobinhoodPolicy({ entityId = 1, recipient }) {
+export async function revokeRobinhoodPolicy({ entityId = 1, recipient, recipients, asset = 'ETH', tokenAddress }) {
   if (!smartAccount || !bundlerClient) throw new Error('Prepare the Robinhood smart account before revoking a mandate.');
+  const hookUninstallDatas = [TimeRangeModule.encodeOnUninstallData({ entityId })];
+  if (normalizeAsset(asset) === 'USDG') {
+    const transferSelector = toFunctionSelector('transfer(address,uint256)');
+    const approveSelector = toFunctionSelector('approve(address,uint256)');
+    hookUninstallDatas.push(
+      NativeTokenLimitModule.encodeOnUninstallData({ entityId }),
+      AllowlistModule.encodeOnUninstallData({ entityId: entityId + ERC20_HOOK_ENTITY_OFFSET, inputs: [{ target: tokenAddress, hasSelectorAllowlist: false, hasERC20SpendLimit: true, erc20SpendLimit: 0n, selectors: [] }] }),
+      AllowlistModule.encodeOnUninstallData({ entityId, inputs: [
+        ...[...new Set((recipients || [recipient]).filter(Boolean))].map(target => ({ target, hasSelectorAllowlist: false, hasERC20SpendLimit: false, erc20SpendLimit: 0n, selectors: [] })),
+        { target: tokenAddress, hasSelectorAllowlist: true, hasERC20SpendLimit: false, erc20SpendLimit: 0n, selectors: [approveSelector, transferSelector] }
+      ] })
+    );
+  } else {
+    hookUninstallDatas.push(
+      NativeTokenLimitModule.encodeOnUninstallData({ entityId }),
+      AllowlistModule.encodeOnUninstallData({ entityId, inputs: [...new Set((recipients || [recipient]).filter(Boolean))].map(target => ({ target, hasSelectorAllowlist: false, hasERC20SpendLimit: false, erc20SpendLimit: 0n, selectors: [] })) })
+    );
+  }
   const callData = await installValidationActions(bundlerClient).encodeUninstallValidation({
     moduleAddress: DefaultModuleAddress.SINGLE_SIGNER_VALIDATION,
     entityId,
     uninstallData: SingleSignerValidationModule.encodeOnUninstallData({ entityId }),
-    hookUninstallDatas: [
-      TimeRangeModule.encodeOnUninstallData({ entityId }),
-      NativeTokenLimitModule.encodeOnUninstallData({ entityId }),
-      AllowlistModule.encodeOnUninstallData({ entityId, inputs: [{
-        target: recipient, hasSelectorAllowlist: false, hasERC20SpendLimit: false, erc20SpendLimit: 0n, selectors: []
-      }] })
-    ],
+    hookUninstallDatas,
     account: smartAccount
   });
   const request = await prepareSponsoredOperation({ callData });

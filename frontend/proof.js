@@ -23,7 +23,7 @@ async function loadPublicProof() {
     const status = await response.json();
     if (!response.ok || !status.ready) throw new Error(status.error || 'Service did not report ready.');
     const policies = status.policies || {};
-    const activePolicies = Object.values(policies).filter(policy => policy?.status === 'active');
+    const activePolicies = Object.values(policies).flatMap(byAsset => Object.values(byAsset || {})).filter(policy => policy?.status === 'active');
     serviceBadge.textContent = 'ONLINE';
     serviceBadge.classList.add('ready');
     serviceState.textContent = 'Production service ready';
@@ -31,8 +31,9 @@ async function loadPublicProof() {
     authState.textContent = status.authRequired ? 'Required' : 'Not reported';
     agentAddress.textContent = short(status.agentAddress);
     activeCount.innerHTML = `${activePolicies.length} active<br>mandates`;
-    setPolicy(arbPolicy, policies['421614']);
-    setPolicy(robinhoodPolicy, policies['46630']);
+    const summarize = chainId => Object.values(policies[String(chainId)] || {}).find(policy => policy?.status === 'active') || Object.values(policies[String(chainId)] || {}).find(Boolean);
+    setPolicy(arbPolicy, summarize(421614));
+    setPolicy(robinhoodPolicy, summarize(46630));
   } catch (error) {
     serviceBadge.textContent = 'UNAVAILABLE';
     serviceState.textContent = 'Live status temporarily unavailable';

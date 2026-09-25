@@ -1,6 +1,6 @@
 # Manda claims and evidence
 
-Updated: 2026-09-20
+Updated: 2026-09-23
 
 This file separates demonstrated behavior from implemented but unverified behavior and future work.
 
@@ -26,6 +26,6 @@ The policy engine's revoked-state rejection is covered by automated tests. The l
 
 - Automatic chain selection, bridging, swaps, or rebalancing.
 - Mainnet funds, production custody, or production security guarantees.
-- Paxos USDG integration.
+- Live USDG execution or production USDG support before end-to-end testnet verification and deployment.
 
 Manda is a testnet hackathon prototype. The two payment paths operate independently and do not depend on a bridge.

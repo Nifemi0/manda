@@ -1,4 +1,8 @@
 const normalizedAddress = value => String(value || '').toLowerCase();
+const normalizedRecipients = policy => {
+  const values = Array.isArray(policy.recipients) ? policy.recipients : [policy.recipient];
+  return [...new Set(values.filter(Boolean).map(normalizedAddress))].sort();
+};
 
 export function policyIdentifier(policy) {
   return `${Number(policy.chainId)}:${String(policy.transactionHash || '').toLowerCase()}`;
@@ -12,8 +16,10 @@ export function policyRegistrationMessage(policy) {
     `Agent: ${normalizedAddress(policy.agentAddress)}`,
     `Account: ${normalizedAddress(policy.smartAccount)}`,
     `Chain: ${Number(policy.chainId)}`,
+    `Asset: ${String(policy.asset || 'ETH').toUpperCase()}`,
+    `Token: ${normalizedAddress(policy.tokenAddress || '')}`,
     `Entity: ${Number(policy.entityId)}`,
-    `Recipient: ${normalizedAddress(policy.recipient)}`,
+    `Recipients: ${normalizedRecipients(policy).join(',')}`,
     `Per payment: ${String(policy.perPaymentWei)}`,
     `Daily runtime budget: ${String(policy.dailyLimitWei)}`,
     `Onchain total allowance: ${String(policy.onchainAllowanceWei || policy.dailyLimitWei)}`,
@@ -33,6 +39,7 @@ export function paymentApprovalMessage(policy, request, approvalExpiresAt) {
     `Request: ${String(request.requestId)}`,
     `Account: ${normalizedAddress(policy.smartAccount)}`,
     `Chain: ${Number(request.chainId)}`,
+    `Asset: ${String(request.asset || policy.asset || 'ETH').toUpperCase()}`,
     `Recipient: ${normalizedAddress(request.recipient)}`,
     `Amount: ${String(request.amountWei)}`,
     `Approval expires: ${Number(approvalExpiresAt)}`

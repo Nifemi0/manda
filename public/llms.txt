@@ -2,7 +2,7 @@
 
 > Manda is a human-owned payment identity that gives personal AI agents narrow, revocable payment authority across Arbitrum Sepolia and Robinhood Chain Testnet.
 
-Manda uses an ERC-4337 Modular Account V2 owned by a human wallet. An AI agent uses a separate delegated key. Payment requests pass through recipient, amount, chain, expiry, daily-budget, approval-threshold, reserve, and replay checks before execution. Eligible UserOperations receive gas sponsorship.
+Manda uses an ERC-4337 Modular Account V2 owned by a human wallet. An AI agent uses a separate delegated key. Payment requests can use native ETH or optional Paxos USDG testnet tokens. The user funds payment principal from their smart account while Manda sponsors eligible network gas. The owner sets a per-payment cap, UTC-resetting daily budget, and a separate cumulative onchain total cap that never resets. The service checks recipient, asset, amount, chain, expiry, daily and total limits, approval threshold, reserve, and replay before execution. The onchain account enforces the lifetime ETH or USDG total cap; the standard USDG hook does not bind the transfer recipient onchain. USDG live execution and production rollout remain pending.
 
 ## Primary pages
 

@@ -2,7 +2,7 @@
 
 **Give agents permission, not your wallet.**
 
-This project is a programmable payment identity shared safely between a person and their personal AI agent. The person owns the account; the agent can make gas-sponsored payments only within explicit, revocable rules.
+This project is a programmable payment identity shared safely between a person and their personal AI agent. The person owns and funds the account; the agent can make payments only within explicit, revocable rules, while the paymaster sponsors eligible network gas.
 
 [Open the live product](https://manda-dun.vercel.app/) · [Read the web documentation](https://manda-dun.vercel.app/docs.html) · [Connect an agent](https://manda-dun.vercel.app/agent.html)
 
@@ -17,8 +17,9 @@ Personal agents need to pay for APIs, data, compute, and digital services withou
 ## Core capabilities
 
 - Shared human-agent payment identity.
-- Limited and revocable agent spending authority.
+- Limited and revocable agent spending authority, with owner-set per-payment, daily-resetting, and lifetime caps.
 - Gas-sponsored ERC-4337 payments.
+- Optional USDG testnet mandates on Arbitrum Sepolia and Robinhood Chain Testnet, alongside the native ETH path.
 - Arbitrum Sepolia and Robinhood Chain testnet support.
 - Unified multi-chain balances and activity.
 
@@ -63,7 +64,7 @@ The agent completes a small approved payment, a larger unauthorized payment is b
 
 ## Current status
 
-The landing page, technical documentation, wallet-aware onboarding, control room, dual-chain Modular Account V2 deployment, delegated mandate, authenticated agent service, sponsored payments on Robinhood Chain Testnet and Arbitrum Sepolia, and policy rejection path are implemented. The public repository passes all 17 tests and a clean production build. Live revocation evidence and the demo video remain; routing and bridging are outside the verified scope.
+The landing page, technical documentation, wallet-aware onboarding, control room, dual-chain Modular Account V2 deployment, delegated mandate, authenticated agent service, sponsored ETH payments on Robinhood Chain Testnet and Arbitrum Sepolia, and policy rejection path are implemented and evidenced. Policy configuration separates the service-enforced UTC daily budget from an owner-set cumulative onchain total cap. USDG testnet policy/payment support is implemented in code; it still needs an owner-signed mandate, test-faucet funds, confirmed payment/rejection evidence, and deployment to the public frontend and VPS backend. The repository passes 26 automated tests and a production build. Live revocation evidence and the demo video remain; routing and bridging are outside the verified scope.
 
 ## Local development
 

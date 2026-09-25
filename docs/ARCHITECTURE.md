@@ -23,8 +23,9 @@ Optional: chain router ──► bridge/rebalancer ──► destination chain
 
 - The human key is the root authority for the smart account.
 - The agent uses a separate delegated or session key.
-- A permission policy limits the agent by maximum payment, daily runtime spend, approved targets, allowed functions, token, chain, and expiry.
-- The Alchemy native-token hook is a cumulative onchain safety ceiling. It decreases after transfers and is not described as a daily-resetting allowance.
+- Payment amounts always come from the user's smart-account balance. A paymaster sponsors eligible network gas; it does not supply ETH or USDG payment principal.
+- The owner selects a per-payment cap, UTC daily budget, and separate total delegated cap. The service resets daily accounting at UTC midnight; the onchain total cap is cumulative, decreases after each transfer, and never resets during that mandate.
+- Native ETH mandates use the native-token hook; USDG mandates use the ERC-20 token-spend hook for the official testnet contract. The service checks the remaining onchain total allowance before submitting a payment.
 - The human can revoke the delegated key at any time.
 - Events record the initiating principal so the interface can distinguish human and agent activity.
 
@@ -39,7 +40,7 @@ Each chain enforces its own account and policy state. The application presents t
 5. A paymaster sponsors gas under an abuse-limited policy.
 6. The application records the result and refreshes the unified feed.
 
-Gasless means the end user does not pay native gas. The application or sponsor still funds the paymaster.
+Gas sponsored means the user does not pay transaction gas from their account. The application or sponsor pays the paymaster's gas cost. The user still funds every payment from their smart-account balance.
 
 ## Chain integrations
 
@@ -48,7 +49,7 @@ Gasless means the end user does not pay native gas. The application or sponsor s
 - The deterministic Modular Account V2 is deployed at `0xA4d8005e48893eD97cB765D7C3D4bcD7bE01F2FE`.
 - Alchemy Bundler and Gas Manager sponsor eligible ERC-4337 operations.
 - Mandate installation and authenticated native-value agent payments are confirmed onchain.
-- Token support beyond native testnet value remains outside the verified claim set.
+- USDG testnet policy and transfer code targets Paxos's deployed Robinhood testnet contract. Live mandate/payment verification remains pending.
 
 ### Arbitrum Sepolia
 
@@ -56,6 +57,11 @@ Gasless means the end user does not pay native gas. The application or sponsor s
 - Candide Bundler and paymaster sponsor eligible ERC-4337 operations.
 - Mandate installation and authenticated native-value agent payments are confirmed onchain.
 - Arbitrum MPP and USDC payment claims remain deferred until compatibility is tested.
+- USDG testnet policy and transfer code targets Paxos's deployed Arbitrum Sepolia contract. Live mandate/payment verification remains pending.
+
+### USDG recipient boundary
+
+The standard SDK ERC-20 spend hook caps cumulative spend against the configured USDG token, but does not bind the destination encoded in `transfer(to, amount)`. The authenticated Manda service checks the recipient before submitting payment. A compromised or misused delegated key could bypass that service check and send tokens to another address within the remaining onchain token cap. Strong onchain recipient binding requires an additional contract or validation module.
 
 ## Cross-chain routing
 

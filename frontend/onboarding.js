@@ -1,7 +1,8 @@
-import { formatEther, parseEther } from 'viem';
+import { formatEther, formatUnits, isAddress, parseEther, parseUnits } from 'viem';
+import { assetDecimals, getUSDGAddress, normalizeAsset } from './assets.js';
 import { deploySmartAccount, installAgentPolicy, prepareSmartAccount, smartAccountConfig } from './smart-account.js';
 import { deployRobinhoodAccount, installRobinhoodPolicy, prepareRobinhoodAccount, robinhoodAccountConfig } from './robinhood-account.js';
-import { readProductState, policyForChain, savePolicy, saveRobinhoodAccount, saveSmartAccount } from './state.js';
+import { readProductState, policyForChain, policiesForChain, savePolicy, saveRobinhoodAccount, saveSmartAccount } from './state.js';
 import { registerPolicy } from './agent-session.js';
 
 const stepButtons = [...document.querySelectorAll('.setup-step')];
@@ -19,9 +20,11 @@ const agentLabel = document.getElementById('agentLabel');
 const agentPurpose = document.getElementById('agentPurpose');
 const mandateForm = document.getElementById('mandateForm');
 const policyRecipient = document.getElementById('policyRecipient');
+const paymentAsset = document.getElementById('paymentAsset');
 const budgetProfile = document.getElementById('budgetProfile');
 const perPaymentLimit = document.getElementById('perPaymentLimit');
 const dailyLimit = document.getElementById('dailyLimit');
+const totalAllowance = document.getElementById('totalAllowance');
 const approvalThreshold = document.getElementById('approvalThreshold');
 const balanceFloor = document.getElementById('balanceFloor');
 const policyPreview = document.getElementById('policyPreview');
@@ -38,29 +41,67 @@ let currentChainId;
 let activeStep = 1;
 
 const budgetProfiles = {
-  starter: { perPayment: '0.000001', daily: '0.000003', threshold: '0.0000005', reserve: '0.001', copy: 'Starter keeps the agent narrow while you validate the workflow.' },
-  standard: { perPayment: '0.000004', daily: '0.000005', threshold: '0.000001', reserve: '0.001', copy: 'Standard allows small routine payments while keeping a reserve.' },
-  funded: { perPayment: '0.001', daily: '0.01', threshold: '0.0001', reserve: '0.005', copy: 'Funded unlocks larger automation while preserving a visible reserve.' }
+  starter: { perPayment: '0.000001', daily: '0.000003', total: '0.00003', threshold: '0.0000005', reserve: '0', copy: 'Starter keeps the agent narrow while you validate the workflow.', usdg: { perPayment: '0.25', daily: '1', total: '10', threshold: '0.05' } },
+  standard: { perPayment: '0.000004', daily: '0.000005', total: '0.0001', threshold: '0.000001', reserve: '0', copy: 'Standard allows small routine payments with a clear total delegation ceiling.', usdg: { perPayment: '1', daily: '10', total: '100', threshold: '0.25' } },
+  funded: { perPayment: '0.001', daily: '0.01', total: '0.1', threshold: '0.0001', reserve: '0', copy: 'Funded unlocks larger user-funded payments with a higher total ceiling.', usdg: { perPayment: '5', daily: '50', total: '500', threshold: '1' } }
 };
 const iconMarkup = name => `<svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-${name}"></use></svg>`;
 
 function updatePolicyPreview() {
   if (!policyPreview) return;
   const profile = budgetProfiles[budgetProfile?.value];
-  policyPreview.textContent = profile?.copy || `Custom policy · ${perPaymentLimit.value || '—'} ETH per payment · ${dailyLimit.value || '—'} ETH daily.`;
+  const asset = normalizeAsset(paymentAsset?.value);
+  policyPreview.textContent = (asset === 'USDG' ? profile?.usdgCopy : profile?.copy) || `Custom policy · ${perPaymentLimit.value || '—'} ${asset} per payment · ${dailyLimit.value || '—'} ${asset} per UTC day · ${totalAllowance.value || '—'} ${asset} total for this mandate. Your account pays the purchase; Manda sponsors eligible gas.`;
 }
+
+function selectPaymentAsset(asset, restore = false) {
+  const isUSDG = normalizeAsset(asset) === 'USDG';
+  const labels = [perPaymentLimit, dailyLimit, approvalThreshold, balanceFloor].map(input => input?.parentElement);
+  if (labels[0]) labels[0].childNodes[0].textContent = `Payment cap (${isUSDG ? 'USDG' : 'ETH'})`;
+  if (labels[1]) labels[1].childNodes[0].textContent = `Daily payment budget (${isUSDG ? 'USDG' : 'ETH'})`;
+  if (totalAllowance?.parentElement) totalAllowance.parentElement.childNodes[0].textContent = `Total delegated cap (${isUSDG ? 'USDG' : 'ETH'})`;
+  if (labels[2]) labels[2].childNodes[0].textContent = `Auto-approve below (${isUSDG ? 'USDG' : 'ETH'})`;
+  if (labels[3]) { labels[3].hidden = isUSDG; labels[3].style.display = isUSDG ? 'none' : ''; }
+  perPaymentLimit.step = isUSDG ? '0.01' : '0.000001';
+  dailyLimit.step = isUSDG ? '0.01' : '0.000001';
+  totalAllowance.step = isUSDG ? '0.01' : '0.000001';
+  approvalThreshold.step = isUSDG ? '0.01' : '0.000001';
+  if (restore) {
+    perPaymentLimit.value = isUSDG ? '1' : budgetProfiles.standard.perPayment;
+    dailyLimit.value = isUSDG ? '10' : budgetProfiles.standard.daily;
+    totalAllowance.value = isUSDG ? budgetProfiles.standard.usdg.total : budgetProfiles.standard.total;
+    approvalThreshold.value = isUSDG ? '0.25' : budgetProfiles.standard.threshold;
+    balanceFloor.value = budgetProfiles.standard.reserve;
+    budgetProfile.value = 'standard';
+  }
+  updatePolicyPreview();
+}
+
+paymentAsset?.addEventListener('change', () => {
+  selectPaymentAsset(paymentAsset.value, true);
+  const chainId = currentChainId ? Number.parseInt(currentChainId, 16) : null;
+  const savedPolicy = chainId ? policyForChain(chainId, paymentAsset.value) : null;
+  if (savedPolicy) applySavedPolicy(savedPolicy);
+  else if (policyAction) {
+    policyAction.disabled = false;
+    policyAction.textContent = 'Review and sign mandate';
+    policyStatus.textContent = `No ${normalizeAsset(paymentAsset.value)} mandate is installed on this network.`;
+  }
+});
 
 budgetProfile?.addEventListener('change', () => {
   const profile = budgetProfiles[budgetProfile.value];
   if (profile) {
-    perPaymentLimit.value = profile.perPayment;
-    dailyLimit.value = profile.daily;
-    approvalThreshold.value = profile.threshold;
+    const values = normalizeAsset(paymentAsset.value) === 'USDG' ? profile.usdg : profile;
+    perPaymentLimit.value = values.perPayment;
+    dailyLimit.value = values.daily;
+    totalAllowance.value = values.total;
+    approvalThreshold.value = values.threshold;
     balanceFloor.value = profile.reserve;
   }
   updatePolicyPreview();
 });
-[perPaymentLimit, dailyLimit, approvalThreshold, balanceFloor].forEach(input => input?.addEventListener('input', () => {
+[perPaymentLimit, dailyLimit, totalAllowance, approvalThreshold, balanceFloor].forEach(input => input?.addEventListener('input', () => {
   if (budgetProfile) budgetProfile.value = 'custom';
   updatePolicyPreview();
 }));
@@ -103,7 +144,7 @@ function renderWallet({ address, network, supported }) {
   document.querySelectorAll('[data-chain]').forEach(button => button.classList.toggle('current', button.dataset.chain === network?.chainId));
   document.getElementById('reviewOwner').textContent = MandaWallet.shortAddress(address);
   document.getElementById('reviewNetwork').textContent = network?.name || 'Unsupported network';
-  const selectedPolicy = network ? policyForChain(Number.parseInt(network.chainId, 16)) : null;
+  const selectedPolicy = network ? policyForChain(Number.parseInt(network.chainId, 16), paymentAsset.value) : null;
   if (selectedPolicy) applySavedPolicy(selectedPolicy);
   else if (policyAction) {
     policyAction.disabled = false;
@@ -173,8 +214,9 @@ async function loadPolicyInputs() {
   else {
     perPaymentLimit.value = perPaymentLimit.value || budgetProfiles.standard.perPayment;
     dailyLimit.value = dailyLimit.value || budgetProfiles.standard.daily;
+    totalAllowance.value = totalAllowance.value || budgetProfiles.standard.total;
     approvalThreshold.value = approvalThreshold.value || '0.000001';
-    balanceFloor.value = balanceFloor.value || '0.001';
+    balanceFloor.value = balanceFloor.value || '0';
   }
   updatePolicyPreview();
   if (!policyExpiry.value) {
@@ -185,18 +227,25 @@ async function loadPolicyInputs() {
 }
 
 function applySavedPolicy(savedPolicy) {
+  paymentAsset.value = normalizeAsset(savedPolicy.asset);
+  selectPaymentAsset(paymentAsset.value);
   budgetProfile.value = savedPolicy.profile || 'custom';
   agentLabel.value = savedPolicy.label || agentLabel.value;
   agentPurpose.value = savedPolicy.purpose || agentPurpose.value;
-  perPaymentLimit.value = savedPolicy.perPaymentWei ? formatEther(BigInt(savedPolicy.perPaymentWei)) : budgetProfiles.standard.perPayment;
-  dailyLimit.value = savedPolicy.dailyLimitWei ? formatEther(BigInt(savedPolicy.dailyLimitWei)) : budgetProfiles.standard.daily;
-  approvalThreshold.value = savedPolicy.approvalThresholdWei ? formatEther(BigInt(savedPolicy.approvalThresholdWei)) : formatEther(BigInt(savedPolicy.perPaymentWei) / 4n);
+  const formatter = paymentAsset.value === 'USDG' ? (value => formatUnits(BigInt(value), assetDecimals('USDG'))) : (value => formatEther(BigInt(value)));
+  perPaymentLimit.value = savedPolicy.perPaymentWei ? formatter(savedPolicy.perPaymentWei) : budgetProfiles.standard.perPayment;
+  dailyLimit.value = savedPolicy.dailyLimitWei ? formatter(savedPolicy.dailyLimitWei) : budgetProfiles.standard.daily;
+  totalAllowance.value = savedPolicy.onchainAllowanceWei ? formatter(savedPolicy.onchainAllowanceWei) : formatter(savedPolicy.dailyLimitWei);
+  approvalThreshold.value = savedPolicy.approvalThresholdWei ? formatter(savedPolicy.approvalThresholdWei) : formatter(BigInt(savedPolicy.perPaymentWei) / 4n);
   balanceFloor.value = savedPolicy.balanceFloorWei ? formatEther(BigInt(savedPolicy.balanceFloorWei)) : '0.001';
-  policyStatus.textContent = savedPolicy.status === 'active'
+  const policyExpired = Number(savedPolicy.expiresAt) <= Date.now();
+  policyStatus.textContent = savedPolicy.status === 'active' && !policyExpired
     ? `Active onchain · ${Number(savedPolicy.chainId) === 46630 ? 'Robinhood' : 'Arbitrum'} · ${MandaWallet.shortAddress(savedPolicy.transactionHash)}`
-    : 'Revoked mandate loaded. A new entity can now be installed.';
-  policyAction.disabled = savedPolicy.status === 'active';
-  policyAction.textContent = savedPolicy.status === 'active' ? 'Revoke active mandate before replacing' : 'Review and sign mandate';
+    : savedPolicy.status === 'expired' || policyExpired
+      ? 'This mandate has expired. A new entity can now be installed.'
+      : 'Revoked mandate loaded. A new entity can now be installed.';
+  policyAction.disabled = savedPolicy.status === 'active' && !policyExpired;
+  policyAction.textContent = savedPolicy.status === 'active' && !policyExpired ? 'Revoke active mandate before replacing' : 'Review and sign mandate';
   updatePolicyPreview();
 }
 
@@ -205,12 +254,27 @@ mandateForm.addEventListener('submit', async event => {
   if (!connectedOwner) return showWalletError(new Error('Connect the human owner first.'));
   if (currentChainId !== '0x66eee' && currentChainId !== '0xb626') return showWalletError(new Error('Switch to Arbitrum Sepolia or Robinhood Chain Testnet before installing the mandate.'));
   if (!agentIdentity) return showWalletError(new Error('The agent identity is not ready.'));
-  const perPaymentWei = parseEther(perPaymentLimit.value);
-  const dailyLimitWei = parseEther(dailyLimit.value);
-  const approvalThresholdWei = parseEther(approvalThreshold.value);
-  const balanceFloorWei = parseEther(balanceFloor.value);
-  if (perPaymentWei <= 0n || dailyLimitWei <= 0n || approvalThresholdWei < 0n || balanceFloorWei < 0n || perPaymentWei > dailyLimitWei || approvalThresholdWei > perPaymentWei) {
-    return showWalletError(new Error('Keep all limits positive, keep auto-approval at or below the per-payment cap, and keep the per-payment cap at or below the daily total.'));
+  const recipients = [...new Set(policyRecipient.value.split(/[\s,;]+/).map(value => value.trim()).filter(Boolean).map(value => value.toLowerCase()))];
+  if (!recipients.length || recipients.length > 32 || recipients.some(recipient => !isAddress(recipient))) return showWalletError(new Error('Enter 1 to 32 valid EVM recipient addresses, separated by new lines.'));
+  const recipient = recipients[0];
+  const asset = normalizeAsset(paymentAsset.value);
+  const decimals = assetDecimals(asset);
+  const parseAmount = asset === 'USDG' ? (value => parseUnits(value, decimals)) : parseEther;
+  let perPaymentWei; let dailyLimitWei; let onchainAllowanceWei; let approvalThresholdWei; let balanceFloorWei;
+  try {
+    perPaymentWei = parseAmount(perPaymentLimit.value);
+    dailyLimitWei = parseAmount(dailyLimit.value);
+    onchainAllowanceWei = parseAmount(totalAllowance.value);
+    approvalThresholdWei = parseAmount(approvalThreshold.value);
+    balanceFloorWei = asset === 'USDG' ? 0n : parseEther(balanceFloor.value);
+  } catch {
+    return showWalletError(new Error(`Enter valid ${asset} amounts using no more than ${decimals} decimal places.`));
+  }
+  if (!Number.isFinite(new Date(policyExpiry.value).getTime()) || new Date(policyExpiry.value).getTime() <= Date.now()) {
+    return showWalletError(new Error('Choose a mandate expiry in the future.'));
+  }
+  if (perPaymentWei <= 0n || dailyLimitWei <= 0n || onchainAllowanceWei <= 0n || approvalThresholdWei < 0n || balanceFloorWei < 0n || perPaymentWei > dailyLimitWei || dailyLimitWei > onchainAllowanceWei || approvalThresholdWei > perPaymentWei) {
+    return showWalletError(new Error('Keep the per-payment cap at or below the daily budget, the daily budget at or below the total delegated cap, and auto-approval at or below the per-payment cap.'));
   }
   policyAction.disabled = true;
   policyAction.textContent = 'Waiting for owner signature…';
@@ -218,28 +282,38 @@ mandateForm.addEventListener('submit', async event => {
   try {
     const isRobinhood = currentChainId === '0xb626';
     const targetChainId = isRobinhood ? robinhoodAccountConfig.chain.id : smartAccountConfig.chain.id;
-    const previousPolicy = policyForChain(targetChainId);
-    if (previousPolicy?.status === 'active') throw new Error('Revoke the active mandate on this network before installing a replacement.');
-    const entityId = Number(previousPolicy?.entityId || 0) + 1;
+    const previousPolicy = policyForChain(targetChainId, asset);
+    if (previousPolicy?.status === 'active' && Number(previousPolicy.expiresAt) > Date.now()) throw new Error('Revoke the active mandate on this network before installing a replacement.');
+    const entityId = Math.max(0, ...policiesForChain(targetChainId).map(item => Number(item.entityId) || 0)) + 1;
+    const tokenAddress = asset === 'USDG' ? getUSDGAddress(isRobinhood ? robinhoodAccountConfig.chain.id : smartAccountConfig.chain.id) : undefined;
+    if (asset === 'USDG' && !tokenAddress) throw new Error('USDG is unavailable on this test network.');
     preparedAccount = isRobinhood ? await prepareRobinhoodAccount(connectedOwner) : await prepareSmartAccount(connectedOwner);
     const result = isRobinhood ? await installRobinhoodPolicy({
       agentAddress: agentIdentity.address,
-      recipient: policyRecipient.value,
+      recipient,
+      recipients,
       dailyLimitWei,
+      onchainAllowanceWei,
       expiresAt: policyExpiry.value,
-      entityId
+      entityId,
+      asset,
+      tokenAddress
     }) : await installAgentPolicy({
       agentAddress: agentIdentity.address,
-      recipient: policyRecipient.value,
+      recipient,
+      recipients,
       dailyLimitWei,
+      onchainAllowanceWei,
       expiresAt: policyExpiry.value,
-      entityId
+      entityId,
+      asset,
+      tokenAddress
     });
     const savedPolicy = {
       label: agentLabel.value.trim(), purpose: agentPurpose.value, profile: budgetProfile.value, ownerAddress: connectedOwner, agentAddress: agentIdentity.address,
-      recipient: policyRecipient.value, perPaymentWei: perPaymentWei.toString(), dailyLimitWei: dailyLimitWei.toString(),
+      recipient, recipients, asset, tokenAddress, perPaymentWei: perPaymentWei.toString(), dailyLimitWei: dailyLimitWei.toString(),
       approvalThresholdWei: approvalThresholdWei.toString(), balanceFloorWei: balanceFloorWei.toString(),
-      onchainAllowanceWei: dailyLimitWei.toString(),
+      onchainAllowanceWei: onchainAllowanceWei.toString(),
       expiresAt: new Date(policyExpiry.value).getTime(), chainId: isRobinhood ? robinhoodAccountConfig.chain.id : smartAccountConfig.chain.id, entityId: result.entityId,
       smartAccount: preparedAccount.address, status: 'active', transactionHash: result.transactionHash, userOperationHash: result.userOperationHash
     };

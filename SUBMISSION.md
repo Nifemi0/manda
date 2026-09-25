@@ -12,13 +12,13 @@ Manda gives personal AI agents narrow, revocable payment authority from a human-
 
 ## Recommended category
 
-If the entry form asks for a category, review **Promising Products Track** first: Manda is a working testnet product with a focused user problem and verified execution, but it does not claim user traction or mainnet readiness. Do not claim automatic entry into multiple prize categories; follow the live form. The project is deployed on Arbitrum Sepolia, which meets the published Arbitrum-chain deployment requirement, and also has a separate Robinhood Chain Testnet path. Manda does not integrate Paxos USDG; the event lists that as extra consideration, not as a qualification requirement.
+If the entry form asks for a category, review **Promising Products Track** first: Manda is a working testnet product with a focused user problem and verified execution, but it does not claim user traction or mainnet readiness. Do not claim automatic entry into multiple prize categories; follow the live form. The deployed project is on Arbitrum Sepolia, which meets the published Arbitrum-chain deployment requirement, and also has a separate Robinhood Chain Testnet path. The code now includes optional USDG testnet policy and payment support on both networks; live USDG execution and production deployment still need verification. The event lists USDG as extra consideration, not as a qualification requirement.
 
 ## Project description
 
 AI agents increasingly need to pay for APIs, data, compute, and digital services, but handing an agent unrestricted wallet access creates an unacceptable security boundary. Manda turns permission into the product.
 
-A person creates and owns one ERC-4337 Modular Account V2 identity. The agent receives a separate delegated key and can request payments only within an owner-defined mandate: approved chain, recipient, per-payment ceiling, daily allowance, expiry, replay protection, approval threshold, and minimum balance reserve. Eligible transactions are gas sponsored, and every approval or rejection is attributed in the activity ledger.
+A person creates and owns one ERC-4337 Modular Account V2 identity. The agent receives a separate delegated key and can request user-funded payments only within an owner-defined mandate: approved chain, recipient, per-payment ceiling, UTC-resetting daily budget, non-resetting total cap, expiry, replay protection, approval threshold, and optional minimum balance reserve. Eligible transaction gas is sponsored, and every approval or rejection is attributed in the activity ledger.
 
 Manda is deployed across Arbitrum Sepolia and Robinhood Chain Testnet using the same deterministic smart-account address. Both networks have confirmed sponsored agent payments. The live production path connects a Vercel frontend to an authenticated service on a VPS, so the project is a working end-to-end system rather than a simulated interface.
 
@@ -93,7 +93,8 @@ Target length: 90–120 seconds.
 - Automatic routing, bridging, swaps, and rebalancing are outside the verified build.
 - This prototype has not received a third-party security audit.
 - Manda has no published user or adoption metrics; do not imply traction.
-- Manda does not currently support Paxos USDG.
+- USDG policy/payment support has been implemented for Paxos testnet token addresses. Do not claim live or production USDG execution until the owner installs a USDG mandate, funds the test account from the official faucet, and verifies a transfer and rejection on the deployed backend.
+- Payment principal always comes from the user's smart account. The sponsor pays eligible gas only. The owner sets separate per-payment, UTC daily, and cumulative lifetime payment caps; the daily budget resets, the onchain total cap does not. The approved USDG recipient is checked by Manda's authenticated service; the standard SDK hook does not constrain the ERC-20 transfer destination in calldata.
 - The repository does not include custom Solidity source; the onchain account and validation modules come from the Modular Account SDK.
 
 ## Screenshots and demo video

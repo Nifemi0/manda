@@ -1,5 +1,7 @@
 import './wallet.js';
 import { agentFetch, ensureAgentSession, readAgentSession } from './agent-session.js';
+import { formatUnits } from 'viem';
+import { assetDecimals, normalizeAsset } from './assets.js';
 
 const serviceStatus = document.getElementById('serviceStatus');
 const serviceBadge = document.getElementById('serviceBadge');
@@ -19,6 +21,7 @@ const snippetLabel = document.getElementById('snippetLabel');
 const dialog = document.getElementById('agentDialog');
 const chainNames = { 421614: 'Arbitrum Sepolia', 46630: 'Robinhood Testnet' };
 let selectedChainId = 421614;
+let selectedAsset = 'ETH';
 let connectedOwner = null;
 let currentPolicy = null;
 let status = null;
@@ -29,12 +32,11 @@ const iconMarkup = name => `<svg class="ui-icon" aria-hidden="true"><use href="/
 document.getElementById('serviceUrl').textContent = serviceUrl;
 
 const short = value => value ? `${value.slice(0, 6)}…${value.slice(-4)}` : '—';
-const formatWei = value => {
+const formatWei = (value, asset = 'ETH') => {
   try {
     const amount = BigInt(value || 0);
-    const whole = amount / 10n ** 18n;
-    const fraction = (amount % 10n ** 18n).toString().padStart(18, '0').replace(/0+$/, '').slice(0, 8);
-    return `${whole}${fraction ? `.${fraction}` : ''} ETH`;
+    const normalized = normalizeAsset(asset);
+    return `${formatUnits(amount, assetDecimals(normalized))} ${normalized}`;
   } catch { return '—'; }
 };
 const showDialog = (title, message) => {
@@ -49,12 +51,13 @@ const setBadge = (element, text, kind = '') => {
 
 function snippets() {
   const recipient = currentPolicy?.recipient || '0xApprovedService';
+  const asset = normalizeAsset(currentPolicy?.asset || selectedAsset);
   return {
     javascript: {
       label: 'manda-payment.js',
       code: `const MANDA_SERVICE_URL = process.env.MANDA_SERVICE_URL || '${serviceUrl}';
 
-export async function requestMandaPayment({ recipient, amountWei }) {
+export async function requestMandaPayment({ recipient, amountWei, asset = '${asset}' }) {
   const response = await fetch(\`\${MANDA_SERVICE_URL}/pay\`, {
     method: 'POST',
     headers: {
@@ -64,6 +67,7 @@ export async function requestMandaPayment({ recipient, amountWei }) {
     body: JSON.stringify({
       requestId: crypto.randomUUID(),
       chainId: ${selectedChainId},
+      asset,
       recipient,
       amountWei: String(amountWei)
     })
@@ -77,7 +81,8 @@ export async function requestMandaPayment({ recipient, amountWei }) {
 // The recipient must match the active Manda policy.
 await requestMandaPayment({
   recipient: '${recipient}',
-  amountWei: '100000000000'
+  amountWei: '${asset === 'USDG' ? '1000000' : '100000000000'}',
+  asset: '${asset}'
 });`
     },
     python: {
@@ -91,7 +96,7 @@ MANDA_SERVICE_URL = os.environ.get(
     '${serviceUrl}',
 )
 
-def request_manda_payment(recipient: str, amount_wei: str):
+def request_manda_payment(recipient: str, amount_wei: str, asset: str = '${asset}'):
     response = requests.post(
         f'{MANDA_SERVICE_URL}/pay',
         headers={
@@ -101,6 +106,7 @@ def request_manda_payment(recipient: str, amount_wei: str):
         json={
             'requestId': str(uuid.uuid4()),
             'chainId': ${selectedChainId},
+            'asset': asset,
             'recipient': recipient,
             'amountWei': str(amount_wei),
         },
@@ -111,7 +117,8 @@ def request_manda_payment(recipient: str, amount_wei: str):
 
 result = request_manda_payment(
     '${recipient}',
-    '100000000000',
+    '${asset === 'USDG' ? '1000000' : '100000000000'}',
+    '${asset}',
 )`
     },
     curl: {
@@ -122,6 +129,7 @@ result = request_manda_payment(
   --data '{
     "requestId": "replace-with-a-unique-id",
     "chainId": ${selectedChainId},
+    "asset": "${asset}",
     "recipient": "${recipient}",
     "amountWei": "100000000000"
   }'`
@@ -140,10 +148,15 @@ result = request_manda_payment(
       },
       "amountWei": {
         "type": "string",
-        "description": "Positive native-token amount in wei"
+        "description": "Positive base-unit integer: wei for ETH, 6-decimal units for USDG"
+      },
+      "asset": {
+        "type": "string",
+        "enum": ["ETH", "USDG"],
+        "description": "Must match the active mandate asset"
       }
     },
-    "required": ["recipient", "amountWei"],
+    "required": ["recipient", "amountWei", "asset"],
     "additionalProperties": false
   }
 }`
@@ -170,12 +183,13 @@ function renderPolicy(policy) {
   document.getElementById('factStatus').textContent = policy.status.toUpperCase();
   document.getElementById('factAccount').textContent = policy.smartAccount;
   document.getElementById('factRecipient').textContent = policy.recipient;
-  document.getElementById('factPayment').textContent = formatWei(policy.perPaymentWei);
-  document.getElementById('factDaily').textContent = formatWei(policy.dailyLimitWei);
-  document.getElementById('factApproval').textContent = formatWei(policy.approvalThresholdWei);
-  document.getElementById('factReserve').textContent = formatWei(policy.balanceFloorWei);
+  document.getElementById('factPayment').textContent = formatWei(policy.perPaymentWei, policy.asset);
+  document.getElementById('factDaily').textContent = formatWei(policy.dailyLimitWei, policy.asset);
+  document.getElementById('factTotal').textContent = formatWei(policy.onchainAllowanceWei || policy.dailyLimitWei, policy.asset);
+  document.getElementById('factApproval').textContent = formatWei(policy.approvalThresholdWei, policy.asset);
+  document.getElementById('factReserve').textContent = normalizeAsset(policy.asset) === 'USDG' ? 'Gas is sponsored separately' : `${formatWei(policy.balanceFloorWei, 'ETH')} kept in account; gas is sponsored`;
   document.getElementById('factExpiry').textContent = new Date(policy.expiresAt).toLocaleString();
-  policyStatus.textContent = `${policy.status === 'active' ? 'Active' : 'Revoked'} on ${chainNames[selectedChainId]}`;
+  policyStatus.textContent = `${policy.status === 'active' ? 'Active' : policy.status === 'expired' ? 'Expired' : 'Revoked'} ${selectedAsset} mandate on ${chainNames[selectedChainId]}`;
   setBadge(policyBadge, policy.status.toUpperCase(), policy.status === 'active' ? 'ready' : 'warn');
   renderSnippet();
 }
@@ -189,8 +203,8 @@ async function loadStatus() {
     setBadge(serviceBadge, 'ONLINE', 'ready');
     agentAddress.textContent = status.agentAddress;
     document.querySelector('[data-copy-target="agentAddress"]').disabled = false;
-    const selected = status.policies?.[String(selectedChainId)];
-    policyStatus.textContent = selected ? `${selected.status === 'active' ? 'Active' : 'Revoked'} on ${chainNames[selectedChainId]}` : `No mandate on ${chainNames[selectedChainId]}`;
+    const selected = status.policies?.[String(selectedChainId)]?.[selectedAsset];
+    policyStatus.textContent = selected ? `${selected.status === 'active' ? 'Active' : 'Revoked'} ${selectedAsset} mandate on ${chainNames[selectedChainId]}` : `No ${selectedAsset} mandate on ${chainNames[selectedChainId]}`;
     setBadge(policyBadge, selected ? selected.status.toUpperCase() : 'NONE', selected?.status === 'active' ? 'ready' : 'warn');
     overallStatus.className = 'ready';
     overallStatus.innerHTML = '<i></i> SERVICE READY';
@@ -231,11 +245,11 @@ async function verifyOwnerAccess() {
     await ensureAgentSession(connectedOwner);
     setBadge(ownerBadge, 'VERIFIED', 'ready');
     ownerStatus.textContent = `${short(connectedOwner)} · private access verified`;
-    const response = await agentFetch(`/api/agent/policy?chainId=${selectedChainId}`, {}, connectedOwner);
+    const response = await agentFetch(`/api/agent/policy?chainId=${selectedChainId}&asset=${selectedAsset}`, {}, connectedOwner);
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Could not load the selected policy.');
     renderPolicy(result.policy);
-    connectionMessage.textContent = `Owner session verified. The ${chainNames[selectedChainId]} mandate is loaded from the authenticated service.`;
+    connectionMessage.textContent = `Owner session verified. The ${selectedAsset} mandate on ${chainNames[selectedChainId]} is loaded from the authenticated service.`;
   } finally {
     verifyAccess.disabled = false;
     verifyAccess.textContent = 'Refresh private policy';
@@ -252,8 +266,20 @@ document.querySelectorAll('[data-chain-id]').forEach(button => button.addEventLi
   document.querySelectorAll('[data-chain-id]').forEach(item => item.classList.toggle('active', item === button));
   document.getElementById('selectedNetwork').textContent = chainNames[selectedChainId].toUpperCase();
   renderPolicy(null);
-  const summary = status?.policies?.[String(selectedChainId)];
-  policyStatus.textContent = summary ? `${summary.status === 'active' ? 'Active' : 'Revoked'} on ${chainNames[selectedChainId]}` : `No mandate on ${chainNames[selectedChainId]}`;
+  const summary = status?.policies?.[String(selectedChainId)]?.[selectedAsset];
+  policyStatus.textContent = summary ? `${summary.status === 'active' ? 'Active' : 'Revoked'} ${selectedAsset} mandate on ${chainNames[selectedChainId]}` : `No ${selectedAsset} mandate on ${chainNames[selectedChainId]}`;
+  setBadge(policyBadge, summary ? summary.status.toUpperCase() : 'NONE', summary?.status === 'active' ? 'ready' : 'warn');
+  renderSnippet();
+  if (connectedOwner && readAgentSession(connectedOwner)) {
+    try { await verifyOwnerAccess(); } catch (error) { connectionMessage.textContent = error.message; }
+  }
+}));
+document.querySelectorAll('[data-asset]').forEach(button => button.addEventListener('click', async () => {
+  selectedAsset = button.dataset.asset;
+  document.querySelectorAll('[data-asset]').forEach(item => item.classList.toggle('active', item === button));
+  renderPolicy(null);
+  const summary = status?.policies?.[String(selectedChainId)]?.[selectedAsset];
+  policyStatus.textContent = summary ? `${summary.status === 'active' ? 'Active' : 'Revoked'} ${selectedAsset} mandate on ${chainNames[selectedChainId]}` : `No ${selectedAsset} mandate on ${chainNames[selectedChainId]}`;
   setBadge(policyBadge, summary ? summary.status.toUpperCase() : 'NONE', summary?.status === 'active' ? 'ready' : 'warn');
   renderSnippet();
   if (connectedOwner && readAgentSession(connectedOwner)) {

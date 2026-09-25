@@ -21,9 +21,11 @@ Manda is a testnet hackathon prototype. Its security goal is to prove that a per
 
 ## Enforcement layers
 
-The installed Modular Account V2 modules bind the delegated validation entity and cumulative native-token spend allowance. The service enforces detailed runtime conditions: active status, expiry, supported chain, approved recipient, positive amount, per-payment maximum, daily budget, pending reservations, reserve floor, signed approval threshold, and replay protection.
+The installed Modular Account V2 modules bind the delegated validation entity and the owner's cumulative total payment allowance in ETH or USDG. That total cap is lifetime for the mandate and does not reset. The service separately enforces the per-payment maximum, UTC daily budget and pending reservations. Before submission it also reads the remaining onchain allowance, so a direct transfer made with the delegated key cannot silently desynchronize the service's ledger. Every payment principal comes from the user's smart account; the configured paymaster sponsors network gas only.
 
-The interface labels these layers separately. A runtime daily limit is not described as a daily-resetting onchain allowance.
+For USDG, the standard SDK hook limits spend against the configured testnet token but does not inspect the recipient inside ERC-20 transfer calldata. Recipient approval is enforced by the authenticated Manda service, so a compromised delegated key could bypass that check and send tokens to another address up to the remaining onchain token cap. This path is testnet-only and not production-ready.
+
+The interface labels these layers separately. A runtime daily budget resets at UTC midnight; the cumulative onchain total cap never resets. The onboarding form requires the total cap to be at least the daily budget.
 
 ## Implemented controls
 
@@ -31,7 +33,7 @@ The interface labels these layers separately. A runtime daily limit is not descr
 - Browser bundles contain neither the Alchemy application key nor Gas Manager policy ID.
 - Payment, policy, and activity routes require an agent token or verified owner session.
 - Owner policy signatures fail after any signed field is changed.
-- High-value approval signatures bind the policy, request ID, account, chain, recipient, amount, and expiry.
+- High-value approval signatures bind the policy, request ID, account, chain, asset, recipient, amount, and expiry.
 - Payment execution is serialized and reserves daily capacity before network submission.
 - Ledger updates use atomic file replacement.
 - Activity rendering escapes untrusted values before inserting them into HTML.

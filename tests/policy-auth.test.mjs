@@ -31,4 +31,20 @@ test('payment approvals bind request, amount, destination, chain, and expiry', a
   const signature = await account.signMessage({ message });
   assert.equal(await verifyMessage({ address: account.address, message, signature }), true);
   assert.equal(await verifyMessage({ address: account.address, message: paymentApprovalMessage(policy, { ...request, amountWei: '76' }, expiresAt), signature }), false);
+  assert.equal(await verifyMessage({ address: account.address, message: paymentApprovalMessage(policy, { ...request, asset: 'USDG' }, expiresAt), signature }), false);
+});
+
+test('owner policy signatures bind the payment asset and token', async () => {
+  const usdgPolicy = { ...policy, asset: 'USDG', tokenAddress: '0x4444444444444444444444444444444444444444' };
+  const message = policyRegistrationMessage(usdgPolicy);
+  const signature = await account.signMessage({ message });
+  assert.equal(await verifyMessage({ address: account.address, message, signature }), true);
+  assert.equal(await verifyMessage({ address: account.address, message: policyRegistrationMessage({ ...usdgPolicy, tokenAddress: '0x5555555555555555555555555555555555555555' }), signature }), false);
+});
+
+test('owner policy signatures bind the normalized recipient set', () => {
+  const multi = { ...policy, recipients: [policy.recipient, '0x4444444444444444444444444444444444444444'] };
+  const changed = { ...multi, recipients: [policy.recipient, '0x5555555555555555555555555555555555555555'] };
+  assert.notEqual(policyRegistrationMessage(multi), policyRegistrationMessage(changed));
+  assert.equal(policyRegistrationMessage(multi), policyRegistrationMessage({ ...multi, recipients: [...multi.recipients].reverse() }));
 });

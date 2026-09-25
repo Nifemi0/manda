@@ -18,8 +18,8 @@ AI agents increasingly need to purchase APIs, data, compute, subscriptions, and 
 
 1. A person creates a shared payment identity and controls its smart account.
 2. The person delegates authority to an AI agent.
-3. The delegation defines a payment cap, daily allowance, approved recipients or services, and expiry.
-4. The agent makes a gas-sponsored payment within those rules.
+3. The owner sets a per-payment cap, UTC daily budget, cumulative total delegated cap, approved recipient or service, and expiry.
+4. The agent pays for the service from the user's account; Manda's sponsor covers eligible network gas only.
 5. A payment outside the rules is rejected.
 6. The activity feed identifies whether the person or agent initiated each action.
 7. The person can revoke the agent immediately.
@@ -42,6 +42,7 @@ The primary demo should take about 60–90 seconds:
 - Human-controlled smart account.
 - Delegated agent authorization with amount, time, and destination constraints.
 - Gas-sponsored payments.
+- Native ETH and optional USDG payments on the two supported testnets, with separate asset-denominated limits.
 - Deployment on Arbitrum Sepolia and Robinhood Chain testnet.
 - Unified balance and activity interface across both networks.
 - Clear human-versus-agent attribution for every action.
@@ -49,7 +50,7 @@ The primary demo should take about 60–90 seconds:
 
 ## Optional feature
 
-An under-the-hood bridge or rebalancer may move funds when the selected chain has insufficient balance. It must remain optional so a delayed bridge cannot break the core demo.
+An under-the-hood bridge or rebalancer may move funds when the selected chain has insufficient balance. It must remain optional so a delayed bridge cannot break the core demo. USDG is an optional testnet payment asset, not a requirement for the core ETH path.
 
 ## Out of scope for the first submission
 

@@ -12,7 +12,7 @@ One payment identity lets a person safely authorize an AI agent to make small, g
 The judge sees one owner, one agent, one policy, and two chains:
 
 1. The owner opens the payment-control dashboard.
-2. The owner gives the agent a $5 daily allowance and a $1 per-payment cap.
+2. The owner chooses a $1 per-payment cap, a $5 UTC daily budget, and a separate cumulative onchain total cap. Those amounts come from the user's account; the paymaster sponsors eligible gas only.
 3. The agent purchases a $0.10 API call. The payment succeeds with sponsored gas.
 4. The agent attempts a $20 payment. The policy blocks it and explains why.
 5. The owner revokes the agent.
@@ -26,7 +26,7 @@ The judge sees one owner, one agent, one policy, and two chains:
 - Responsive web dashboard.
 - Human-owned smart account connection or creation.
 - One registered AI agent with a separate delegated key.
-- Policy editor with daily allowance, per-payment cap, approved recipient, expiry, and revocation.
+- Policy editor with selected asset, asset-denominated per-payment cap, UTC daily budget, cumulative lifetime cap, approved recipient, expiry, and revocation.
 - Agent-triggered payment to one demo service.
 - Sponsored transaction path.
 - Unified activity feed with human or agent attribution, network, status, reason, and explorer link.
@@ -65,7 +65,7 @@ These may be implemented as one dashboard with drawers and panels rather than se
 - Use ERC-4337 smart accounts and sponsored UserOperations.
 - Start with the Robinhood Chain Alchemy path because official bundler and Gas Manager support is documented.
 - Establish a compatible Arbitrum Sepolia bundler and paymaster path.
-- Use one verified test token per chain if a single token is not available on both.
+- Keep native ETH supported as the baseline and offer USDG only at the official Paxos testnet contracts on Arbitrum Sepolia and Robinhood Chain Testnet.
 - Keep security-critical permission checks in the account validation or contract path.
 - Pre-fund testnet balances so the live demo does not depend on bridging.
 

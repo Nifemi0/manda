@@ -1,4 +1,4 @@
-import { createPublicClient, formatEther, http } from 'viem';
+import { createPublicClient, erc20Abi, formatEther, formatUnits, http } from 'viem';
 import { arbitrumSepolia } from 'viem/chains';
 import { robinhoodTestnet } from '@alchemy/common/chains';
 import { prepareSmartAccount, revokeAgentPolicy } from './smart-account.js';
@@ -6,6 +6,7 @@ import { prepareRobinhoodAccount, revokeRobinhoodPolicy } from './robinhood-acco
 import { appendActivity, readProductState, savePolicy, writeProductState } from './state.js';
 import { agentFetch, createPaymentApproval, ensureAgentSession, readAgentSession } from './agent-session.js';
 import { policyIdentifier } from './policy-auth.js';
+import { assetDecimals, normalizeAsset, USDG_TESTNET_ADDRESSES } from './assets.js';
 
 const dashboardConnect = document.getElementById('dashboardConnect');
 const ownerValue = document.getElementById('ownerValue');
@@ -24,13 +25,20 @@ const escapeHtml = value => String(value ?? '').replace(/[&<>'"]/g, character =>
 const iconMarkup = name => `<svg class="ui-icon" aria-hidden="true"><use href="/icons.svg#icon-${name}"></use></svg>`;
 
 async function renderBalances(state) {
-  const requests = [
-    state.smartAccount?.address ? arbitrumClient.getBalance({ address: state.smartAccount.address }) : Promise.reject(new Error('No Arbitrum account')),
-    state.robinhoodAccount?.address ? robinhoodClient.getBalance({ address: state.robinhoodAccount.address }) : Promise.reject(new Error('No Robinhood account'))
-  ];
-  const [arb, robin] = await Promise.allSettled(requests);
-  document.getElementById('arbitrumBalance').textContent = arb.status === 'fulfilled' ? `${Number(formatEther(arb.value)).toFixed(6)} ETH` : 'Not available';
-  document.getElementById('robinhoodBalance').textContent = robin.status === 'fulfilled' ? `${Number(formatEther(robin.value)).toFixed(6)} ETH` : 'Not prepared';
+  const getBalances = async (client, account, chainId) => {
+    if (!account?.address) throw new Error('Account not prepared');
+    const [eth, usdg] = await Promise.all([
+      client.getBalance({ address: account.address }),
+      client.readContract({ address: USDG_TESTNET_ADDRESSES[chainId], abi: erc20Abi, functionName: 'balanceOf', args: [account.address] })
+    ]);
+    return `${Number(formatEther(eth)).toFixed(6)} ETH · ${Number(formatUnits(usdg, 6)).toFixed(2)} USDG`;
+  };
+  const [arb, robin] = await Promise.allSettled([
+    getBalances(arbitrumClient, state.smartAccount, 421614),
+    getBalances(robinhoodClient, state.robinhoodAccount, 46630)
+  ]);
+  document.getElementById('arbitrumBalance').textContent = arb.status === 'fulfilled' ? arb.value : 'Not available';
+  document.getElementById('robinhoodBalance').textContent = robin.status === 'fulfilled' ? robin.value : 'Not prepared';
 }
 
 function renderActivity(items = []) {
@@ -74,17 +82,19 @@ function renderProductState(state = readProductState()) {
   }
   const policyNetwork = Number(policy?.chainId) === 46630 ? 'Robinhood Chain Testnet' : 'Arbitrum Sepolia';
   if (policy) {
+    const asset = normalizeAsset(policy.asset);
+    const formatPolicyAmount = value => `${formatUnits(BigInt(value), assetDecimals(asset))} ${asset}`;
     document.getElementById('policyValue').textContent = policy.status === 'active' ? policy.label : 'Revoked';
     document.getElementById('policyDescription').textContent = policy.status === 'active'
-      ? `${formatEther(BigInt(policy.perPaymentWei))} ETH per payment · ${formatEther(BigInt(policy.dailyLimitWei))} ETH daily runtime budget · ${formatEther(BigInt(policy.onchainAllowanceWei || policy.dailyLimitWei))} ETH initial onchain total cap · signed approval above ${formatEther(BigInt(policy.approvalThresholdWei || (BigInt(policy.perPaymentWei) / 4n)))} ETH · reserve ${formatEther(BigInt(policy.balanceFloorWei || 1000000000000000n))} ETH.`
+      ? `${formatPolicyAmount(policy.perPaymentWei)} per payment from your account · ${formatPolicyAmount(policy.dailyLimitWei)} daily payment budget (resets at UTC midnight) · ${formatPolicyAmount(policy.onchainAllowanceWei || policy.dailyLimitWei)} total onchain delegated cap (does not reset) · signed approval above ${formatPolicyAmount(policy.approvalThresholdWei || (BigInt(policy.perPaymentWei) / 4n))}${asset === 'ETH' ? ` · keep ${formatEther(BigInt(policy.balanceFloorWei || 1000000000000000n))} ETH in the account` : ''}. Gas is sponsored separately.`
       : `Delegated key revoked ${new Date(policy.revokedAt).toLocaleString()}.`;
     const ownerReady = Boolean(connectedOwner && (policy.ownerAddress || state.owner)?.toLowerCase() === connectedOwner.toLowerCase());
     revokeAgent.disabled = policy.status !== 'active' || !ownerReady;
     document.getElementById('revokeDescription').textContent = policy.status === 'active' ? `Disable ${policy.label} and remove its validation hooks immediately.` : 'No active mandate can execute payments.';
     const active = policy.status === 'active';
     approvedPayment.disabled = !active || !ownerReady; blockedPayment.disabled = !active || !ownerReady;
-    document.getElementById('approvedAmount').textContent = active ? `${formatEther(BigInt(policy.perPaymentWei) / 10n)} ETH to the approved service.` : 'The mandate is not active.';
-    document.getElementById('blockedAmount').textContent = active ? `${formatEther(BigInt(policy.perPaymentWei) * 20n)} ETH exceeds the per-payment cap.` : 'The mandate is not active.';
+    document.getElementById('approvedAmount').textContent = active ? `${formatPolicyAmount(BigInt(policy.perPaymentWei) / 10n)} to the approved service.` : 'The mandate is not active.';
+    document.getElementById('blockedAmount').textContent = active ? `${formatPolicyAmount(BigInt(policy.perPaymentWei) * 20n)} exceeds the per-payment cap.` : 'The mandate is not active.';
   }
   renderBalances(state).catch(() => {});
   const activePolicy = policy?.status === 'active';
@@ -96,7 +106,7 @@ function renderProductState(state = readProductState()) {
     : 'Sponsorship status will appear after a verified policy is loaded.';
   if (sponsorshipState) sponsorshipState.innerHTML = `<i></i> ${activePolicy ? `ACTIVE ON ${policyNetwork.toUpperCase()}` : 'WAITING FOR POLICY'}`;
   if (routingDescription) routingDescription.textContent = activePolicy
-    ? `${policyNetwork} is selected for this policy. Route only to the allowlisted recipient while the reserve remains intact.`
+      ? `${policyNetwork} is selected for this ${normalizeAsset(policy.asset)} policy. Payments come from your account, eligible gas is sponsored, the service checks the recipient and daily budget, and the onchain total cap is cumulative.`
     : 'Automatic selection stays unavailable until a standalone path is verified.';
   accountHeadline.innerHTML = account.deployed
     ? (activePolicy ? 'Shared identity live.<br>Agent is bounded.' : 'Shared identity live.<br>Agent policy comes next.')
@@ -123,23 +133,32 @@ async function syncAgentActivity(ownerAddress = connectedOwner) {
 async function syncAgentState(ownerAddress, preferredChainId = 421614) {
   const selectedChainId = [421614, 46630].includes(Number(preferredChainId)) ? Number(preferredChainId) : 421614;
   const chainIds = [selectedChainId, ...[421614, 46630].filter(chainId => chainId !== selectedChainId)];
-  const loaded = await Promise.all(chainIds.map(async chainId => {
-    const response = await agentFetch(`/api/agent/policy?chainId=${chainId}`, {}, ownerAddress);
+  const loaded = await Promise.all(chainIds.flatMap(chainId => ['ETH', 'USDG'].map(async asset => {
+    const response = await agentFetch(`/api/agent/policy?chainId=${chainId}&asset=${asset}`, {}, ownerAddress);
     if (!response.ok) return null;
     return (await response.json()).policy;
-  }));
+  })));
   const policies = loaded.filter(Boolean);
   if (!policies.length) throw new Error('No deployed mandate is available for this owner.');
-  const preferred = policies.find(policy => Number(policy.chainId) === selectedChainId) || policies[0];
-  const byChain = Object.fromEntries(policies.map(policy => [String(policy.chainId), policy]));
+  const previousState = readProductState();
+  const preferred = policies.find(policy => Number(policy.chainId) === selectedChainId && normalizeAsset(policy.asset) === normalizeAsset(previousState.policy?.asset))
+    || policies.find(policy => Number(policy.chainId) === selectedChainId) || policies[0];
+  const byChain = { ...(previousState.policies || {}) };
+  for (const policy of policies) {
+    const chainKey = String(policy.chainId);
+    const existing = byChain[chainKey];
+    const byAsset = existing?.ETH || existing?.USDG ? existing : existing ? { [normalizeAsset(existing.asset)]: existing } : {};
+    byChain[chainKey] = { ...byAsset, [normalizeAsset(policy.asset)]: policy };
+  }
   const accountFor = chainId => {
-    const policy = byChain[String(chainId)];
+    const entry = byChain[String(chainId)];
+    const policy = entry?.ETH || entry?.USDG ? entry.ETH || entry.USDG : entry;
     return policy ? { address: policy.smartAccount, chainId, deployed: true, verifiedAt: new Date().toISOString() } : undefined;
   };
   writeProductState({
     owner: ownerAddress,
     policy: preferred,
-    policies: { ...(readProductState().policies || {}), ...byChain },
+    policies: byChain,
     smartAccount: accountFor(421614),
     robinhoodAccount: accountFor(46630)
   });
@@ -161,7 +180,7 @@ async function runPayment(kind) {
   paymentResult.className = 'payment-result pending';
   paymentResult.querySelector('span').textContent = kind === 'approved' ? 'Agent is evaluating and submitting the sponsored payment…' : 'Agent is evaluating the excessive request…';
   try {
-    const request = { requestId: crypto.randomUUID(), chainId: policy.chainId, recipient: policy.recipient, amountWei: amountWei.toString() };
+    const request = { requestId: crypto.randomUUID(), chainId: policy.chainId, asset: normalizeAsset(policy.asset), recipient: policy.recipient, amountWei: amountWei.toString() };
     let response = await agentFetch('/api/agent/pay', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(request) }, ownerAddress);
     let result = await response.json();
     if (response.status === 403 && result.reason === 'HUMAN_APPROVAL_REQUIRED') {
@@ -226,8 +245,8 @@ revokeAgent.addEventListener('click', async () => {
     await MandaWallet.switchNetwork(isRobinhood ? '0xb626' : '0x66eee');
     if (isRobinhood) await prepareRobinhoodAccount(ownerAddress); else await prepareSmartAccount(ownerAddress);
     const result = isRobinhood
-      ? await revokeRobinhoodPolicy({ entityId: state.policy.entityId, recipient: state.policy.recipient })
-      : await revokeAgentPolicy({ entityId: state.policy.entityId, recipient: state.policy.recipient });
+      ? await revokeRobinhoodPolicy({ entityId: state.policy.entityId, recipient: state.policy.recipient, recipients: state.policy.recipients, asset: state.policy.asset, tokenAddress: state.policy.tokenAddress })
+      : await revokeAgentPolicy({ entityId: state.policy.entityId, recipient: state.policy.recipient, recipients: state.policy.recipients, asset: state.policy.asset, tokenAddress: state.policy.tokenAddress });
     const revokedPolicy = { ...state.policy, ownerAddress, status: 'revoked', revokedAt: Date.now(), mandateTransactionHash: state.policy.transactionHash, transactionHash: result.transactionHash, revocationTransactionHash: result.transactionHash, revocationUserOperationHash: result.userOperationHash };
     savePolicy(revokedPolicy);
     const sync = await agentFetch('/api/agent/policy', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ policy: revokedPolicy }) }, ownerAddress);
