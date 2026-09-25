@@ -1,8 +1,8 @@
 # Manda Agent Service API
 
-The agent service exposes a narrow payment interface at `http://127.0.0.1:4174`. In the browser application, requests are proxied through `/api/agent` so the frontend never receives the delegated private key or server credentials.
+The agent service exposes a narrow payment interface locally at `http://127.0.0.1:4174` and remotely at `https://manda-dun.vercel.app/api/agent`. The production Vercel route forwards permitted requests to the private service on the VPS, so the frontend never receives the delegated private key or server credentials.
 
-This deployment is currently local-only. The public HTTPS agent API in the roadmap is not live; TLS termination and multi-tenant isolation remain deployment work.
+The HTTPS API is live for one configured owner and agent service. Multi-tenant isolation, public self-service token provisioning, and independent agent-token rotation remain future work.
 
 The interactive connection guide at `/agent.html` checks service availability, creates an owner-authenticated browser session, reads the selected mandate, and generates adapters for common agent runtimes. It never renders the bearer token or delegated private key.
 
@@ -23,7 +23,7 @@ Returns public service health and the delegated agent address. It does not expos
 
 ### `GET /capabilities?chainId=<id>&asset=<ETH|USDG>`
 
-Requires the same bearer token or verified owner session as `/policy`. Returns policy status, permitted recipients, payment/daily/total limits, approval threshold, daily spend remaining, and supported actions. `quote` is currently `false`; quote-to-invoice purchasing is not implemented.
+Available on the local service, but not yet exposed through the production Vercel proxy. Requires the same bearer token or verified owner session as `/policy`. Returns policy status, permitted recipients, payment/daily/total limits, approval threshold, daily spend remaining, and supported actions. `quote` is currently `false`; quote-to-invoice purchasing is not implemented.
 
 ## Owner session
 

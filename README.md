@@ -8,7 +8,7 @@ This project is a programmable payment identity shared safely between a person a
 
 [Inspect live proof](https://manda-dun.vercel.app/proof.html) — public service state, active mandates, confirmed receipts, and implementation boundaries without a wallet connection.
 
-The live site is the current product preview: [open Manda](https://manda-dun.vercel.app/). Screenshots in `evidence/` include earlier UI iterations and are not final submission media.
+The live site is the current product preview: [open Manda](https://manda-dun.vercel.app/). Current submission screenshots, sanitized API proof, and the public demo video are linked in [the submission bundle](submission/README.md). Screenshots in `evidence/` include earlier UI iterations.
 
 ## Why it exists
 
@@ -30,7 +30,7 @@ The agent completes a small approved payment, a larger unauthorized payment is b
 ## Verified onchain evidence
 
 - Shared Modular Account V2: [`0xA4d8…F2FE`](https://sepolia.arbiscan.io/address/0xA4d8005e48893eD97cB765D7C3D4bcD7bE01F2FE)
-- Production Arbitrum Sepolia payment: [`0x9529…8d2b`](https://sepolia.arbiscan.io/tx/0x952916eb8280a0a30972edfa181f337fc0d3bbbe4d6fb390289935dc27558d2b)
+- Production Arbitrum Sepolia payment recorded for the demo: [`0x166b…ea3`](https://sepolia.arbiscan.io/tx/0x166bb92cb97c3b15947289a88bcd04f37fce41b82db03c8f6de7c7e92ace9ea3)
 - Robinhood Chain Testnet payment: [`0x0632…42f3`](https://explorer.testnet.chain.robinhood.com/tx/0x063219ecd3b3c8913ca40f3eba470dd16fa66d552c9ea95e4a62f645035142f3)
 - [Claims and evidence matrix](CLAIMS.md)
 
@@ -64,7 +64,7 @@ The agent completes a small approved payment, a larger unauthorized payment is b
 
 ## Current status
 
-The landing page, technical documentation, wallet-aware onboarding, control room, dual-chain Modular Account V2 deployment, delegated mandate, authenticated agent service, sponsored ETH payments on Robinhood Chain Testnet and Arbitrum Sepolia, and policy rejection path are implemented and evidenced. Policy configuration separates the service-enforced UTC daily budget from an owner-set cumulative onchain total cap. USDG testnet policy/payment support is implemented in code; it still needs an owner-signed mandate, test-faucet funds, confirmed payment/rejection evidence, and deployment to the public frontend and VPS backend. The repository passes 26 automated tests and a production build. Live revocation evidence and the demo video remain; routing and bridging are outside the verified scope.
+The landing page, technical documentation, wallet-aware onboarding, control room, dual-chain Modular Account V2 deployment, delegated mandate, authenticated agent service, sponsored ETH payments on Robinhood Chain Testnet and Arbitrum Sepolia, and policy rejection path are implemented and evidenced. The Arbitrum mandate is active; the Robinhood mandate has expired, though its historical payment remains confirmed. Policy configuration separates the service-enforced UTC daily budget from an owner-set cumulative onchain total cap. USDG testnet policy/payment support is implemented in code; it still needs an owner-signed mandate, test-faucet funds, confirmed payment/rejection evidence, and deployment to the public frontend and VPS backend. The repository passes 29 automated tests and a production build. The [demo video is public](https://github.com/Nifemi0/manda/releases/download/hackquest-demo-2026-09-25/manda-hackathon-proof-cut.mp4); live revocation evidence remains unverified. Routing and bridging are outside the verified scope.
 
 ## Local development
 

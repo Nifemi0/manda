@@ -1,6 +1,6 @@
 # Manda — HackQuest entry draft
 
-**Status: media and copy prepared; HackQuest submission not confirmed.** This draft targets the Arbitrum Open House Singapore Online Buildathon on HackQuest. Check the live entry form for its final fields, track rules, and timezone before submitting.
+**Status: media and copy published; HackQuest submission not confirmed.** This draft targets the Arbitrum Open House Singapore Online Buildathon on HackQuest. Check the live entry form for its final fields, track rules, and timezone before submitting.
 
 ## Project title
 
@@ -60,7 +60,7 @@ The repository composes the deployed Modular Account V2 and installed validation
 - Arbitrum account: https://sepolia.arbiscan.io/address/0xA4d8005e48893eD97cB765D7C3D4bcD7bE01F2FE
 - Arbitrum production payment recorded for this video: https://sepolia.arbiscan.io/tx/0x166bb92cb97c3b15947289a88bcd04f37fce41b82db03c8f6de7c7e92ace9ea3
 - Robinhood payment: https://explorer.testnet.chain.robinhood.com/tx/0x063219ecd3b3c8913ca40f3eba470dd16fa66d552c9ea95e4a62f645035142f3
-- Demo video: **add public release URL after publication**
+- Demo video: https://github.com/Nifemi0/manda/releases/download/hackquest-demo-2026-09-25/manda-hackathon-proof-cut.mp4
 
 ## Reproduction checks
 
@@ -107,6 +107,6 @@ The screenshots show Robinhood's historical verified payment and its currently e
 
 - Confirm the live form's exact title, category, description, team, and link fields; fill team roles and contact details without guessing.
 - Add the current cover image and fresh screenshots from `submission/media`.
-- Add the published proof-cut URL.
+- Add the published proof-cut URL from the links above.
 - Re-check the deadline timezone and any extra terms in HackQuest before the final submit action.
 - Verify the public repository and live demo open in a signed-out browser.

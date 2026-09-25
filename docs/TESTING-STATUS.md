@@ -49,5 +49,5 @@ Both payment paths and mandate installations are verified. Revocation remains un
 
 ## Submission work remaining
 
-- Publish the rendered proof-cut video and add its URL to the HackQuest entry.
+- Add the [published proof-cut video](https://github.com/Nifemi0/manda/releases/download/hackquest-demo-2026-09-25/manda-hackathon-proof-cut.mp4) to the HackQuest entry.
 - Add the final team/profile fields and submit the HackQuest entry.
