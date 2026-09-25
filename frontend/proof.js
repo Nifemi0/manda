@@ -11,9 +11,15 @@ const robinhoodPolicy = document.getElementById('robinhoodPolicy');
 const short = value => value ? `${value.slice(0, 6)}…${value.slice(-4)}` : 'Unavailable';
 
 function setPolicy(element, policy) {
-  const active = policy?.status === 'active';
-  element.textContent = active ? 'ACTIVE MANDATE' : policy ? String(policy.status).toUpperCase() : 'NOT REPORTED';
+  const expired = policy?.status === 'active' && Number(policy.expiresAt) <= Date.now();
+  const active = policy?.status === 'active' && !expired;
+  element.textContent = active ? 'ACTIVE MANDATE' : expired ? 'EXPIRED' : policy?.status ? String(policy.status).toUpperCase() : 'NOT REPORTED';
   element.classList.toggle('ready', active);
+}
+
+function policyEntries(entry) {
+  if (!entry || typeof entry !== 'object') return [];
+  return 'status' in entry ? [entry] : Object.values(entry).filter(value => value && typeof value === 'object');
 }
 
 async function loadPublicProof() {
@@ -23,7 +29,7 @@ async function loadPublicProof() {
     const status = await response.json();
     if (!response.ok || !status.ready) throw new Error(status.error || 'Service did not report ready.');
     const policies = status.policies || {};
-    const activePolicies = Object.values(policies).flatMap(byAsset => Object.values(byAsset || {})).filter(policy => policy?.status === 'active');
+    const activePolicies = Object.values(policies).flatMap(policyEntries).filter(policy => policy.status === 'active' && Number(policy.expiresAt) > Date.now());
     serviceBadge.textContent = 'ONLINE';
     serviceBadge.classList.add('ready');
     serviceState.textContent = 'Production service ready';
@@ -31,7 +37,10 @@ async function loadPublicProof() {
     authState.textContent = status.authRequired ? 'Required' : 'Not reported';
     agentAddress.textContent = short(status.agentAddress);
     activeCount.innerHTML = `${activePolicies.length} active<br>mandates`;
-    const summarize = chainId => Object.values(policies[String(chainId)] || {}).find(policy => policy?.status === 'active') || Object.values(policies[String(chainId)] || {}).find(Boolean);
+    const summarize = chainId => {
+      const entries = policyEntries(policies[String(chainId)]);
+      return entries.find(policy => policy.status === 'active' && Number(policy.expiresAt) > Date.now()) || entries[0];
+    };
     setPolicy(arbPolicy, summarize(421614));
     setPolicy(robinhoodPolicy, summarize(46630));
   } catch (error) {

@@ -1,6 +1,6 @@
 # Manda — HackQuest entry draft
 
-**Status: prepared locally; not submitted.** This draft targets the Arbitrum Open House Singapore Online Buildathon on HackQuest. Check the live event page and entry form for the final fields, track rules, and timezone before submitting.
+**Status: media and copy prepared; HackQuest submission not confirmed.** This draft targets the Arbitrum Open House Singapore Online Buildathon on HackQuest. Check the live entry form for its final fields, track rules, and timezone before submitting.
 
 ## Project title
 
@@ -58,9 +58,9 @@ The repository composes the deployed Modular Account V2 and installed validation
 - Documentation: https://manda-dun.vercel.app/docs.html
 - Source: https://github.com/Nifemi0/manda
 - Arbitrum account: https://sepolia.arbiscan.io/address/0xA4d8005e48893eD97cB765D7C3D4bcD7bE01F2FE
-- Arbitrum production payment: https://sepolia.arbiscan.io/tx/0x952916eb8280a0a30972edfa181f337fc0d3bbbe4d6fb390289935dc27558d2b
+- Arbitrum production payment recorded for this video: https://sepolia.arbiscan.io/tx/0x166bb92cb97c3b15947289a88bcd04f37fce41b82db03c8f6de7c7e92ace9ea3
 - Robinhood payment: https://explorer.testnet.chain.robinhood.com/tx/0x063219ecd3b3c8913ca40f3eba470dd16fa66d552c9ea95e4a62f645035142f3
-- Demo video: **add public video URL before submission**
+- Demo video: **add public release URL after publication**
 
 ## Reproduction checks
 
@@ -99,19 +99,14 @@ Target length: 90–120 seconds.
 
 ## Screenshots and demo video
 
-Do not reuse the existing full-page images under `evidence/` as final entry media: they capture an earlier design and test state. Capture fresh images from the current production site after the final UI review:
+Fresh production screenshots are ready in [`submission/media`](submission/media). Use `cover.png` as the project cover, `proof-status.png` and `proof-receipts.png` for the verified status and payment history, and `agent-tool.png` for the integration surface. `live-payment.png` and `policy-denial.png` are frames from the newly rendered proof cut. The 97-second video records the production API's approved payment, its confirmed Arbitrum Sepolia receipt, and an over-limit request blocked with HTTP 403 before a transaction was created. The JSON evidence is in [`submission/evidence`](submission/evidence).
 
-- Landing page showing the human-owned identity and agent boundary.
-- Public proof page with both networks and confirmed explorer links.
-- Connected control room showing the active policy and attributed payment.
-- Agent connection page showing the narrow request interface.
-
-Record a 90–120 second walkthrough using the sequence below. Add the public video URL and the project cover image after they are created.
+The screenshots show Robinhood's historical verified payment and its currently expired mandate. Do not describe that mandate as active.
 
 ## Final portal checklist
 
 - Confirm the live form's exact title, category, description, team, and link fields; fill team roles and contact details without guessing.
-- Add a current cover image and fresh screenshots; do not upload the older `evidence/` screenshots as if they showed the current build.
-- Record and publish the walkthrough, then add its public video URL.
+- Add the current cover image and fresh screenshots from `submission/media`.
+- Add the published proof-cut URL.
 - Re-check the deadline timezone and any extra terms in HackQuest before the final submit action.
 - Verify the public repository and live demo open in a signed-out browser.

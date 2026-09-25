@@ -11,5 +11,9 @@ dist/
 .agent-ledger.local.json
 .agent-ledger.local.tmp
 !.env.example
+videos/
+submission/*-capture/
+submission/capture-proof/
+submission/proof-video-frame.png
 
 .vercel

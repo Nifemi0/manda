@@ -1,11 +1,11 @@
 # Manda Testing Status
 
-Updated: 2026-09-20
+Updated: 2026-09-25
 
 ## Verified
 
 - Production frontend build succeeds with Vite.
-- Seventeen automated tests cover policy boundaries, scoped and reserved daily spend, invalid amounts, revocation state, replay, signed approval retries, wrong-chain requests, untrusted approval flags, and tamper-resistant owner signatures.
+- Twenty-nine automated tests cover policy boundaries, scoped and reserved daily spend, invalid amounts, revocation state, replay, signed approval retries, wrong-chain requests, untrusted approval flags, tamper-resistant owner signatures, and token-policy paths.
 - The human-owned Modular Account V2 has non-empty runtime bytecode on Arbitrum Sepolia.
 - The local agent service loads a separate secp256k1 key from an ignored local file and reports a distinct service recipient.
 - The browser never receives the agent private key.
@@ -27,7 +27,8 @@ Updated: 2026-09-20
 - The hardened authenticated agent path was retested on both networks. Robinhood confirmed a `1 wei` payment in transaction `0x063219ecd3b3c8913ca40f3eba470dd16fa66d552c9ea95e4a62f645035142f3` at block `122007013`. The matching Arbitrum request was correctly blocked with `BALANCE_FLOOR_BREACH` because the account balance is `0 ETH`; no Arbitrum transaction was created.
 - After funding, the hardened Arbitrum path confirmed an authenticated `1 wei` agent payment through Candide. Transaction: `0xde404f32df06016fe3f2c97afb028cf853246c479258547270fadf4443b2c1d8`; UserOperation: `0xfaeec686e9f9cd82b58927a6be21d8326e1ac36499b71fdeff40178e82f5e503`; receipt status `success`, block `310850473`. The account retained `0.025999999999999999 ETH`, the recipient received `1 wei`, and the onchain allowance decreased to `4999999999999 wei`.
 - The deployed Vercel-to-VPS production path was exercised in Chrome with the owner session verified. A `100000000000 wei` (`0.0000001 ETH`) Arbitrum Sepolia payment reached the allowlisted recipient through Candide sponsorship. Transaction: `0x952916eb8280a0a30972edfa181f337fc0d3bbbe4d6fb390289935dc27558d2b`; UserOperation: `0xcef93aadfc42a575013f8daa043e842d57d60322a83524a5ce6ee04671d8c248`; receipt status `0x1`, block `310901837`. The production control room displayed the confirmed result and explorer evidence in its attributed activity ledger.
-- A clean tracked-files verification completed on 2026-09-20: `npm ci`, all 17 automated tests, and the Vite production build passed from an isolated directory.
+- On 2026-09-25, the deployed production agent API confirmed a `100000000000 wei` Arbitrum Sepolia payment in transaction `0x166bb92cb97c3b15947289a88bcd04f37fce41b82db03c8f6de7c7e92ace9ea3`; RPC receipt status `0x1`, block `312715270`. A separate request one wei above the `1000000000000 wei` per-payment cap returned HTTP `403` and `PAYMENT_LIMIT_EXCEEDED`, with no transaction hash. Sanitized API and RPC responses are in `submission/evidence/`.
+- On 2026-09-25, all 29 automated tests and the Vite production build passed.
 
 Run the automated checks with:
 
@@ -48,5 +49,5 @@ Both payment paths and mandate installations are verified. Revocation remains un
 
 ## Submission work remaining
 
-- Record and publish the demo video.
-- Add the final team/profile fields and demo URL in HackQuest.
+- Publish the rendered proof-cut video and add its URL to the HackQuest entry.
+- Add the final team/profile fields and submit the HackQuest entry.
