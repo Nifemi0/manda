@@ -67,7 +67,7 @@ function selectPaymentAsset(asset, restore = false) {
   perPaymentLimit.step = isUSDG ? '0.01' : '0.000001';
   dailyLimit.step = isUSDG ? '0.01' : '0.000001';
   totalAllowance.step = isUSDG ? '0.01' : '0.000001';
-  approvalThreshold.step = isUSDG ? '0.01' : '0.000001';
+  approvalThreshold.step = 'any';
   if (restore) {
     perPaymentLimit.value = isUSDG ? '1' : budgetProfiles.standard.perPayment;
     dailyLimit.value = isUSDG ? '10' : budgetProfiles.standard.daily;
