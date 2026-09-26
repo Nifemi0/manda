@@ -1,11 +1,11 @@
 # Manda Testing Status
 
-Updated: 2026-09-25
+Updated: 2026-09-26
 
 ## Verified
 
 - Production frontend build succeeds with Vite.
-- Twenty-nine automated tests cover policy boundaries, scoped and reserved daily spend, invalid amounts, revocation state, replay, signed approval retries, wrong-chain requests, untrusted approval flags, tamper-resistant owner signatures, and token-policy paths.
+- Thirty-one automated tests cover policy boundaries, scoped and reserved daily spend, invalid amounts, revocation state, replay, signed approval retries, wrong-chain requests, untrusted approval flags, tamper-resistant owner signatures, and token-policy paths.
 - The human-owned Modular Account V2 has non-empty runtime bytecode on Arbitrum Sepolia.
 - The local agent service loads a separate secp256k1 key from an ignored local file and reports a distinct service recipient.
 - The browser never receives the agent private key.
@@ -29,6 +29,9 @@ Updated: 2026-09-25
 - The deployed Vercel-to-VPS production path was exercised in Chrome with the owner session verified. A `100000000000 wei` (`0.0000001 ETH`) Arbitrum Sepolia payment reached the allowlisted recipient through Candide sponsorship. Transaction: `0x952916eb8280a0a30972edfa181f337fc0d3bbbe4d6fb390289935dc27558d2b`; UserOperation: `0xcef93aadfc42a575013f8daa043e842d57d60322a83524a5ce6ee04671d8c248`; receipt status `0x1`, block `310901837`. The production control room displayed the confirmed result and explorer evidence in its attributed activity ledger.
 - On 2026-09-25, the deployed production agent API confirmed a `100000000000 wei` Arbitrum Sepolia payment in transaction `0x166bb92cb97c3b15947289a88bcd04f37fce41b82db03c8f6de7c7e92ace9ea3`; RPC receipt status `0x1`, block `312715270`. A separate request one wei above the `1000000000000 wei` per-payment cap returned HTTP `403` and `PAYMENT_LIMIT_EXCEEDED`, with no transaction hash. Sanitized API and RPC responses are in `submission/evidence/`.
 - On 2026-09-25, all 29 automated tests and the Vite production build passed.
+- On 2026-09-26, the owner signed an Arbitrum Sepolia revocation for entity `1`. [Transaction `0x60f202ec751b31e012e7f4e566e0d2960f3f6314bae9bce5e9e258ba38beb177`](https://sepolia.arbiscan.io/tx/0x60f202ec751b31e012e7f4e566e0d2960f3f6314bae9bce5e9e258ba38beb177) confirmed onchain; validation flags for that entity were disabled and the production service reported the policy revoked.
+- The owner then installed Arbitrum ETH entity `2` and Robinhood ETH entity `3`. Read-only onchain checks found both active with a `5000000000000 wei` cumulative cap each and expiry 2026-10-26 19:00 UTC. The production public status endpoint reported both active. The published payment receipts predate these renewals.
+- On 2026-09-26, all 31 automated tests and the Vite production build passed.
 
 Run the automated checks with:
 
@@ -39,13 +42,13 @@ npm run build
 
 ## Implemented but awaiting onchain verification
 
-- Owner-signed uninstall of the validation entity and all three hooks on both chains. The Robinhood-specific path is implemented but has not been executed against the live mandate.
+- Owner-signed uninstall of the Robinhood validation entity and hooks. The Arbitrum live uninstall was verified; the Robinhood-specific path has not been executed against the current live mandate.
 - A rejected post-revocation operation.
 - USDG payment code now targets Paxos's official Arbitrum Sepolia and Robinhood Testnet token contracts, with asset-bound owner policy signatures, ERC-20 spend hooks, token-balance checks, and asset-scoped service budgets. The owner-set onchain total cap is cumulative and separate from the UTC daily budget. No USDG mandate or transfer has been installed or confirmed onchain yet.
 - The SDK's ERC-20 hook caps token spend but does not bind the transfer destination. Manda checks the approved recipient in the authenticated payment service; direct onchain recipient binding would require an additional contract/module.
 - On 2026-09-23, the USDG token contract code, symbol, and 6-decimal metadata were verified read-only against Arbitrum Sepolia and Robinhood Testnet. `npm test` passes 26/26 and `npm run build` succeeds. No USDG UserOperation was submitted as part of these checks.
 
-Both payment paths and mandate installations are verified. Revocation remains unverified until the owner signs the live uninstall flow; executing it will intentionally disable the active demo mandate.
+Both historical payment paths and current ETH mandate installations are verified. Arbitrum owner-signed revocation is verified; live post-revocation payment denial and Robinhood revocation remain unverified.
 
 ## Submission work remaining
 

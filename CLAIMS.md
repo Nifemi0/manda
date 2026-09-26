@@ -1,6 +1,6 @@
 # Manda claims and evidence
 
-Updated: 2026-09-25
+Updated: 2026-09-26
 
 This file separates demonstrated behavior from implemented but unverified behavior and future work.
 
@@ -13,14 +13,16 @@ This file separates demonstrated behavior from implemented but unverified behavi
 | The same deterministic account address is deployed on Robinhood Chain Testnet and can execute sponsored payments. | [Confirmed transaction `0x0632…42f3`](https://explorer.testnet.chain.robinhood.com/tx/0x063219ecd3b3c8913ca40f3eba470dd16fa66d552c9ea95e4a62f645035142f3), block `122007013`. |
 | Requests above the configured payment limit are blocked before a transaction is created. | On 2026-09-25, the production API returned HTTP `403` and `PAYMENT_LIMIT_EXCEEDED` for an amount one wei above the cap, without a transaction hash. See [saved response](submission/evidence/live-block-result.json). |
 | The agent cannot authorize itself by sending a boolean approval flag. | Automated tamper-resistance and signed-approval tests in `tests/policy-auth.test.mjs` and `tests/policy-engine.test.mjs`. |
-| The repository is reproducible from tracked files. | On 2026-09-25, `npm test` passed 29/29 tests and `npm run build` succeeded. |
+| The owner can revoke an Arbitrum mandate onchain. | On 2026-09-26, the owner signed [revocation transaction `0x60f2…b177`](https://sepolia.arbiscan.io/tx/0x60f202ec751b31e012e7f4e566e0d2960f3f6314bae9bce5e9e258ba38beb177). The former entity `1` reported disabled validation flags, and the agent service reported the policy revoked. A new owner-signed entity `2` was then installed and reported active. |
+| ETH mandates are active on both supported testnets. | On 2026-09-26, read-only onchain checks found Arbitrum entity `2` and Robinhood entity `3` active, each with a `5000000000000 wei` cumulative cap expiring 2026-10-26 19:00 UTC. The [public status page](https://manda-dun.vercel.app/proof.html) reported both active. This confirms mandate state, not a fresh payment under either renewed mandate. |
+| The repository is reproducible from tracked files. | On 2026-09-26, `npm test` passed 31/31 tests and `npm run build` succeeded. |
 
 ## Implemented, awaiting live verification
 
-- Owner-signed uninstall of the validation entity and hooks on both supported chains.
-- Rejection of an agent request after the live onchain mandate has been revoked.
+- Owner-signed uninstall on Robinhood Chain Testnet.
+- Rejection of an agent request after a live onchain mandate has been revoked.
 
-The policy engine's revoked-state rejection is covered by automated tests. The live uninstall flow is intentionally left active for the demo account until it is captured as the final revocation demonstration.
+The policy engine's revoked-state rejection is covered by automated tests. The Arbitrum live uninstall was captured; Robinhood live uninstall and a subsequent denied payment remain to be demonstrated.
 
 ## Outside the verified scope
 
