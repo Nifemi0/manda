@@ -6,12 +6,17 @@ import {
   SingleSignerValidationModule, TimeRangeModule, installValidationActions, toModularAccountV2
 } from '@alchemy/smart-accounts';
 import { ERC20_HOOK_ENTITY_OFFSET, normalizeAsset } from './assets.js';
+import { nextAvailableEntityId } from './mandate-entity.js';
 
 const bundlerUrl = '/api/robinhood';
 let smartAccount;
 let bundlerClient;
 
 export const robinhoodAccountConfig = { apiKeyReady: true, sponsorshipReady: true, chain: robinhoodTestnet };
+
+export async function nextRobinhoodPolicyEntityId(firstCandidate) {
+  return nextAvailableEntityId(smartAccount, firstCandidate);
+}
 
 export async function prepareRobinhoodAccount(ownerAddress) {
   const provider = MandaWallet.getProvider();

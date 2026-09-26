@@ -6,6 +6,7 @@ import {
   SingleSignerValidationModule, TimeRangeModule, installValidationActions, toModularAccountV2
 } from '@alchemy/smart-accounts';
 import { ERC20_HOOK_ENTITY_OFFSET, normalizeAsset } from './assets.js';
+import { nextAvailableEntityId } from './mandate-entity.js';
 
 const bundlerUrl = import.meta.env.VITE_BUNDLER_URL?.trim() || 'https://api.candide.dev/public/v3/arbitrum-sepolia';
 const usesAlchemyPolicy = bundlerUrl.startsWith('/api/alchemy');
@@ -18,6 +19,10 @@ export const smartAccountConfig = {
   sponsorshipReady: true,
   chain: arbitrumSepolia
 };
+
+export async function nextArbitrumPolicyEntityId(firstCandidate) {
+  return nextAvailableEntityId(smartAccount, firstCandidate);
+}
 
 export async function prepareSmartAccount(ownerAddress) {
   const provider = MandaWallet.getProvider();

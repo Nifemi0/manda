@@ -2,8 +2,8 @@ import { formatEther, formatUnits, isAddress, parseEther, parseUnits } from 'vie
 import { assetDecimals, getUSDGAddress, normalizeAsset } from './assets.js';
 import agentIdentityConfig from './agent-identity.json';
 import demoService from './demo-service.json';
-import { deploySmartAccount, installAgentPolicy, prepareSmartAccount, smartAccountConfig } from './smart-account.js';
-import { deployRobinhoodAccount, installRobinhoodPolicy, prepareRobinhoodAccount, robinhoodAccountConfig } from './robinhood-account.js';
+import { deploySmartAccount, installAgentPolicy, nextArbitrumPolicyEntityId, prepareSmartAccount, smartAccountConfig } from './smart-account.js';
+import { deployRobinhoodAccount, installRobinhoodPolicy, nextRobinhoodPolicyEntityId, prepareRobinhoodAccount, robinhoodAccountConfig } from './robinhood-account.js';
 import { readProductState, policyForChain, policiesForChain, savePolicy, saveRobinhoodAccount, saveSmartAccount } from './state.js';
 import { registerPolicy } from './agent-session.js';
 
@@ -282,10 +282,11 @@ mandateForm.addEventListener('submit', async event => {
     const targetChainId = isRobinhood ? robinhoodAccountConfig.chain.id : smartAccountConfig.chain.id;
     const previousPolicy = policyForChain(targetChainId, asset);
     if (previousPolicy?.status === 'active' && Number(previousPolicy.expiresAt) > Date.now()) throw new Error('Revoke the active mandate on this network before installing a replacement.');
-    const entityId = Math.max(0, ...policiesForChain(targetChainId).map(item => Number(item.entityId) || 0)) + 1;
+    const firstCandidate = Math.max(0, ...policiesForChain(targetChainId).map(item => Number(item.entityId) || 0)) + 1;
     const tokenAddress = asset === 'USDG' ? getUSDGAddress(isRobinhood ? robinhoodAccountConfig.chain.id : smartAccountConfig.chain.id) : undefined;
     if (asset === 'USDG' && !tokenAddress) throw new Error('USDG is unavailable on this test network.');
     preparedAccount = isRobinhood ? await prepareRobinhoodAccount(connectedOwner) : await prepareSmartAccount(connectedOwner);
+    const entityId = await (isRobinhood ? nextRobinhoodPolicyEntityId(firstCandidate) : nextArbitrumPolicyEntityId(firstCandidate));
     const result = isRobinhood ? await installRobinhoodPolicy({
       agentAddress: agentIdentity.address,
       recipient,
