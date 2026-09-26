@@ -21,4 +21,6 @@ Copy `deploy/manda.service` to `/etc/systemd/system/manda.service` and `deploy/n
 
 Point a domain at the VPS before using Certbot. HTTPS is required before exposing agent credentials or using the production wallet flow.
 
-The Vercel frontend uses the catch-all function at `api/agent/[...path].js`. Set `MANDA_BACKEND_ORIGIN` in Vercel to the HTTPS origin that exposes the private agent service. The proxy forwards only the documented Manda agent routes and never stores the delegated key or Alchemy credentials.
+The Vercel frontend uses the catch-all function at `api/agent/[...path].js`. Set `MANDA_BACKEND_ORIGIN` in Vercel to the HTTPS origin that exposes the private agent service. The proxy forwards only the documented Manda agent routes and never stores the delegated key.
+
+Robinhood mandate installation and payments use `api/robinhood.js` as a same-origin JSON-RPC proxy. Set `ALCHEMY_API_KEY` and `ALCHEMY_GAS_POLICY_ID` as sensitive production environment variables in Vercel. The function permits only the bundler and sponsorship methods the wallet flow needs; these credentials must never be bundled into frontend assets. Deploy again after changing production environment variables.
