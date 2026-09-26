@@ -1,5 +1,7 @@
 import { formatEther, formatUnits, isAddress, parseEther, parseUnits } from 'viem';
 import { assetDecimals, getUSDGAddress, normalizeAsset } from './assets.js';
+import agentIdentityConfig from './agent-identity.json';
+import demoService from './demo-service.json';
 import { deploySmartAccount, installAgentPolicy, prepareSmartAccount, smartAccountConfig } from './smart-account.js';
 import { deployRobinhoodAccount, installRobinhoodPolicy, prepareRobinhoodAccount, robinhoodAccountConfig } from './robinhood-account.js';
 import { readProductState, policyForChain, policiesForChain, savePolicy, saveRobinhoodAccount, saveSmartAccount } from './state.js';
@@ -202,13 +204,9 @@ function renderPolicyDraft() {
 }
 
 async function loadPolicyInputs() {
-  const [agent, service] = await Promise.all([
-    fetch('./agent-identity.json').then(response => response.json()),
-    fetch('./demo-service.json').then(response => response.json())
-  ]);
-  agentIdentity = agent;
-  document.getElementById('agentAddress').textContent = `AGENT KEY · ${MandaWallet.shortAddress(agent.address)}`;
-  policyRecipient.value = service.address;
+  agentIdentity = agentIdentityConfig;
+  document.getElementById('agentAddress').textContent = `AGENT KEY · ${MandaWallet.shortAddress(agentIdentity.address)}`;
+  policyRecipient.value = demoService.address;
   const savedPolicy = readProductState().policy;
   if (savedPolicy) applySavedPolicy(savedPolicy);
   else {
