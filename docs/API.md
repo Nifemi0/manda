@@ -23,7 +23,7 @@ Returns public service health and the delegated agent address. It does not expos
 
 ### `GET /capabilities?chainId=<id>&asset=<ETH|USDG>`
 
-Available on the local service, but not yet exposed through the production Vercel proxy. Requires the same bearer token or verified owner session as `/policy`. Returns policy status, permitted recipients, payment/daily/total limits, approval threshold, daily spend remaining, and supported actions. `quote` is currently `false`; quote-to-invoice purchasing is not implemented.
+Available through the local service and production Vercel proxy. Requires the same bearer token or verified owner session as `/policy`. Returns policy status, permitted recipients, payment/daily/total limits, approval threshold, daily spend remaining, and supported actions. `quote` is currently `false`; quote-to-invoice purchasing is not implemented.
 
 ## Owner session
 

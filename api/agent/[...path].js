@@ -1,5 +1,6 @@
 const routes = new Map([
   ['/status', new Set(['GET'])],
+  ['/capabilities', new Set(['GET'])],
   ['/auth/challenge', new Set(['GET'])],
   ['/auth/verify', new Set(['POST'])],
   ['/activity', new Set(['GET'])],

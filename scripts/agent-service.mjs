@@ -319,7 +319,7 @@ createServer(async (req, res) => {
         }));
         return [id, byAsset];
       }));
-      return respond(res, 200, { ready: true, agentAddress: identity.address, service, authRequired: true, policyInstalled: Object.values(policies).some(byAsset => Object.values(byAsset).some(Boolean)), policies });
+      return respond(res, 200, { ready: true, agentAddress: identity.address, service, authRequired: true, policyInstalled: Object.values(policies).some(byAsset => Object.values(byAsset).some(policy => policy?.status === 'active')), policies });
     }
     if (req.method === 'GET' && url.pathname === '/auth/challenge') {
       const ownerAddress = url.searchParams.get('owner');
