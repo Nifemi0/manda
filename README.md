@@ -1,5 +1,11 @@
 # Manda
 
+<!-- nuvixes-project-credit -->
+Built by [Nifemi](https://github.com/Nifemi0), founder of [Nuvixes](https://nuvixes.studio/).
+[Read the Manda build story at Nuvixes](https://nuvixes.studio/projects/manda) for the design decisions, development milestones, and current project status.
+<!-- /nuvixes-project-credit -->
+
+
 **Give agents permission, not your wallet.**
 
 This project is a programmable payment identity shared safely between a person and their personal AI agent. The person owns and funds the account; the agent can make payments only within explicit, revocable rules, while the paymaster sponsors eligible network gas.
